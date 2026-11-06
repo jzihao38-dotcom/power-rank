@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="300">
+<title>次神：光之觉醒 · 区服战力榜</title>
+<style>
+  :root{
+    --bg:#0b0f16; --bg2:#111825; --card:#141c2b; --line:#22304a;
+    --txt:#e8eefc; --dim:#8fa3c4; --accent:#5b8cff; --up:#28c76f; --down:#ff5b6e;
+    --pvp:#a06bff;
+  }
+  html[data-theme="light"]{
+    --bg:#f4f6fb; --bg2:#ffffff; --card:#ffffff; --line:#e2e8f4;
+    --txt:#16233a; --dim:#65748f; --accent:#2f6bff; --pvp:#7c3aed;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:radial-gradient(1200px 600px at 20% -10%,var(--bg2),var(--bg)) fixed;
+    color:var(--txt);font:14px/1.6 "PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+
+  /* ---------- 顶栏 ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .logo{
+    width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;
+    background:linear-gradient(135deg,var(--accent),#9b6bff);box-shadow:0 8px 24px rgba(91,140,255,.35)
+  }
+  h1{margin:0;font-size:21px;letter-spacing:.3px}
+  .sub{margin:2px 0 0;color:var(--dim);font-size:12.5px}
+  .sub b{color:var(--txt);font-weight:600}
+  .scope{color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);
+         border-radius:6px;padding:1px 7px;font-size:11.5px}
+  .adminbar{display:inline-flex;align-items:center;gap:8px}
+  .adminbar .tag{color:var(--dim);font-size:11.5px}
+  .ghost{
+    background:transparent;border:1px solid var(--line);color:var(--dim);border-radius:10px;
+    padding:7px 13px;cursor:pointer;font-size:13px;transition:.18s
+  }
+  .ghost:hover{color:var(--txt);border-color:var(--accent)}
+
+  /* ---------- KPI ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .kpi{
+    background:linear-gradient(180deg,var(--card),color-mix(in srgb,var(--card) 88%,transparent));
+    border:1px solid var(--line);border-radius:16px;padding:16px 18px;position:relative;overflow:hidden
+  }
+  .kpi::after{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--accent);opacity:.75}
+  .kpi .k{color:var(--dim);font-size:12px;letter-spacing:.6px}
+  .kpi .v{font-size:26px;font-weight:700;letter-spacing:.5px;margin-top:6px;font-variant-numeric:tabular-nums}
+  .kpi .t{font-size:12px;margin-top:2px;color:var(--dim)}
+  .kpi .t .up{color:var(--up)} .kpi .t .down{color:var(--down)}
+
+  /* ---------- 面板 ---------- */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 18px 20px;margin-bottom:18px}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+  h2{margin:0;font-size:15px;font-weight:600;letter-spacing:.4px}
+  h2 .tag{font-size:11px;color:var(--dim);font-weight:400;margin-left:8px}
+
+  /* ---------- 分段按钮 ---------- */
+  .segs{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .seg{display:inline-flex;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:2px}
+  .seg button{
+    background:transparent;border:0;color:var(--dim);font-size:12px;padding:5px 12px;border-radius:8px;
+    cursor:pointer;transition:.15s;font-family:inherit
+  }
+  .seg button.on{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--txt);font-weight:600}
+
+  /* ---------- 图表 ---------- */
+  .chart-wrap{width:100%;height:290px}
+  svg{display:block;width:100%;height:100%;overflow:visible}
+  .grid line{stroke:var(--line);stroke-width:1}
+  .grid text{fill:var(--dim);font-size:10.5px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;
+    padding:4px 11px;font-size:12.5px;cursor:pointer;user-select:none;transition:.15s;color:var(--dim)
+  }
+  .chip:hover{color:var(--txt)}
+  .chip.on{color:var(--txt);border-color:currentColor;background:color-mix(in srgb,currentColor 9%,transparent)}
+  .dot{width:9px;height:9px;border-radius:50%;background:currentColor}
+
+  /* ---------- 工具条 ---------- */
+  input[type=search]{
+    background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:7px 12px;
+    color:var(--txt);font-size:13px;outline:none;width:200px
+  }
+  input[type=search]:focus{border-color:var(--accent)}
+  .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+  button.chip{
+    background:var(--bg2);border:1px solid var(--line);border-radius:999px;
+    padding:7px 14px;font-size:12.5px;color:var(--txt);cursor:pointer;white-space:nowrap
+  }
+  button.chip:hover{border-color:var(--accent)}
+  button.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .linkbtn{background:none;border:0;color:var(--dim);font-size:12.5px;cursor:pointer;padding:6px 2px;font-family:inherit}
+  .linkbtn:hover{color:var(--accent)}
+
+  /* ---------- 表格 ---------- */
+  .tbl-scroll{overflow:auto;max-height:78vh}
+  tr.mine td{background:rgba(91,140,255,.10)}
+  tr.mine .srvname::after{
+    content:'我的区';font-size:10px;margin-left:6px;padding:1px 5px;border-radius:6px;
+    background:var(--accent);color:#fff;vertical-align:middle
+  }
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  thead th{
+    text-align:left;font-size:11.5px;letter-spacing:.8px;color:var(--dim);font-weight:500;
+    padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;background:var(--card)
+  }
+  thead th.sortable{cursor:pointer;user-select:none;transition:color .15s}
+  thead th.sortable:hover{color:var(--txt)}
+  thead th.on{color:var(--accent)}
+  thead th .arw{font-size:9px;opacity:0;margin-left:3px}
+  thead th.on .arw{opacity:1}
+  tbody td{padding:9px 10px;border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent);white-space:nowrap}
+  tbody tr{transition:background .15s;cursor:pointer}
+  tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+  .rk{
+    width:34px;height:26px;border-radius:8px;display:grid;place-items:center;
+    font-weight:700;font-size:13px;background:color-mix(in srgb,var(--line) 65%,transparent);color:var(--dim)
+  }
+  .rk.r1{background:linear-gradient(135deg,#ffc861,#ff9d3c);color:#2a1a00}
+  .rk.r2{background:linear-gradient(135deg,#dbe4f2,#a9bad4);color:#1a2130}
+  .rk.r3{background:linear-gradient(135deg,#e8a06a,#c9713a);color:#2a1405}
+  .mv{font-size:12px;font-weight:600;min-width:44px;display:inline-block}
+  .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--dim)}
+  .srvname{font-weight:600}
+  .srvname small{display:block;font-size:11px;color:var(--dim);font-weight:400}
+  .pw{font-weight:700;font-variant-numeric:tabular-nums;line-height:1.25}
+  .pw .d{display:block;font-size:10.5px;font-weight:500}
+  .pw.alpha{font-family:"JetBrains Mono",Consolas,"Courier New",monospace;letter-spacing:.4px}
+  .bar{height:5px;border-radius:99px;background:color-mix(in srgb,var(--line) 70%,transparent);margin-top:4px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),#a06bff)}
+  .dim{color:var(--dim)}
+
+  /* ---------- 分页 ---------- */
+  .pager{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .pages{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .pg{min-width:30px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--bg2);
+      color:var(--dim);font-size:12.5px;cursor:pointer;padding:0 9px;font-family:inherit;line-height:26px}
+  .pg:hover:not([disabled]){color:var(--txt);border-color:var(--accent)}
+  .pg.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .pg[disabled]{opacity:.35;cursor:default}
+  .pg.gap{border:0;background:none;cursor:default}
+  select.ps{background:var(--bg2);border:1px solid var(--line);border-radius:9px;color:var(--txt);
+            font-size:12.5px;padding:6px 8px;outline:none;font-family:inherit}
+  .pinfo{color:var(--dim);font-size:12px}
+
+  /* ---------- 区服详情 ---------- */
+  .mask{position:fixed;inset:0;background:rgba(6,10,18,.6);backdrop-filter:blur(2px);
+        display:none;place-items:center;z-index:60;padding:20px}
+  .mask.on{display:grid}
+  .dcard{width:min(760px,100%);background:var(--card);border:1px solid var(--line);border-radius:18px;
+         padding:20px 20px 16px;position:relative;max-height:86vh;overflow:auto}
+  .dcard h3{margin:0;font-size:18px;letter-spacing:.3px}
+  .dcard .x{position:absolute;top:10px;right:12px;background:none;border:0;color:var(--dim);
+            font-size:22px;line-height:1;cursor:pointer}
+  .dcard .x:hover{color:var(--txt)}
+  .dsub{color:var(--dim);font-size:12.5px;margin-top:3px}
+  .kv{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 10px}
+  .kv div{background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:9px 12px}
+  .kv span{display:block;font-size:11px;color:var(--dim);letter-spacing:.4px}
+  .kv b{font-size:15.5px;font-variant-numeric:tabular-nums}
+  .roster{width:100%;border-collapse:collapse}
+  .roster th{font-size:11px;color:var(--dim);font-weight:500;text-align:left;padding:7px 8px;
+             border-bottom:1px solid var(--line)}
+  .roster td{padding:7px 8px;border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent);font-size:13px}
+  .roster .no{color:var(--dim);width:38px}
+  .dnote{color:var(--dim);font-size:11.5px;margin-top:10px}
+  .pavatar{width:34px;height:34px;border-radius:50%;object-fit:cover;background:var(--bg2);
+           border:1px solid var(--line);vertical-align:middle}
+  .pcell{display:flex;align-items:center;gap:10px;min-width:150px}
+  .pcell .nm{font-weight:600}
+  .pcell .ar{display:block;font-size:11px;color:var(--dim);font-weight:400}
+
+  /* ---------- 玩家详情 ---------- */
+  .phead{display:flex;align-items:center;gap:16px;margin:14px 0 6px}
+  .phead img{width:64px;height:64px;border-radius:16px;object-fit:cover;background:var(--bg2);
+             border:1px solid var(--line)}
+  .phead .pid{color:var(--dim);font-size:12px;margin-top:2px}
+  .attgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 14px}
+  .attgrid div{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
+  .attgrid span{display:block;font-size:10.5px;color:var(--dim);letter-spacing:.3px}
+  .attgrid b{font-size:13.5px;font-variant-numeric:tabular-nums;word-break:break-all}
+  .tz{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 4px}
+  .tz .t{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px}
+  .tz .t img{width:100%;aspect-ratio:1;object-fit:contain;border-radius:8px;background:color-mix(in srgb,var(--line) 35%,transparent)}
+  .tz .t .tn{font-weight:600;font-size:12.5px;margin-top:6px}
+  .tz .t .tl{font-size:11px;color:var(--dim)}
+  .tz .t .b{font-size:12px;margin-top:4px}
+  .tz .t .exs{display:flex;flex-wrap:wrap;gap:3px 5px;margin-top:6px;font-size:10.5px;
+              color:var(--dim);line-height:1.5;min-height:0}
+  .tz .t .st{color:#f5a623;font-size:12px;letter-spacing:1px;font-weight:700}
+  .tz .t .ex{display:inline-block;font-size:10.5px;padding:1px 6px;border-radius:6px;
+             border:1px solid color-mix(in srgb,currentColor 35%,transparent);
+             background:color-mix(in srgb,currentColor 8%,transparent)}
+  .ex-green{color:#3fb950} .ex-blue{color:#4aa8ff} .ex-purple{color:#b26bff}
+  .ex-orange{color:#f0883e} .ex-red{color:#f85149} .ex-white{color:var(--txt)}
+  .ex-cyan{color:#39c5cf}
+  .sec-t{font-size:13px;font-weight:600;margin:14px 0 6px;letter-spacing:.3px}
+  .sec-t .tag{font-size:11px;color:var(--dim);font-weight:400;margin-left:8px}
+  .sumline{display:flex;flex-wrap:wrap;gap:8px}
+  .sumline span{font-size:12px;background:var(--bg2);border:1px solid var(--line);
+                border-radius:8px;padding:4px 10px;color:var(--dim)}
+  .sumline b{color:var(--txt)}
+
+  /* ---------- 运行记录 ---------- */
+  .runs{display:flex;flex-wrap:wrap;gap:8px}
+  .run{font-size:11.5px;border:1px solid var(--line);border-radius:8px;padding:5px 10px;color:var(--dim)}
+  .run.ok{border-color:color-mix(in srgb,var(--up) 45%,transparent)}
+  .run.bad{border-color:color-mix(in srgb,var(--down) 55%,transparent);color:var(--down)}
+  footer{color:var(--dim);font-size:11.5px;text-align:center;margin-top:26px}
+
+  /* 数据不是最新的（最近一次抓取失败/被判定残缺）时的提示条 */
+  .stale[hidden]{display:none}
+  .stale{
+    display:flex;align-items:center;gap:10px;margin-bottom:16px;
+    border:1px solid color-mix(in srgb,var(--down) 45%,transparent);
+    background:color-mix(in srgb,var(--down) 8%,transparent);
+    border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--dim);
+  }
+  .stale b{color:var(--down)}
+
+  /* ---------- 管理员验证 ---------- */
+  .adminlock{margin-left:10px;display:inline-flex;align-items:center;gap:6px;vertical-align:middle}
+  .adminlock input{background:var(--bg2);border:1px solid var(--line);border-radius:8px;color:var(--txt);
+                   padding:5px 9px;font-size:12.5px;width:110px;outline:none;font-family:inherit}
+  .adminlock input:focus{border-color:var(--accent)}
+  .adminlock button{background:transparent;border:1px solid var(--line);border-radius:8px;color:var(--dim);
+                    font-size:12px;padding:5px 10px;cursor:pointer;font-family:inherit}
+  .adminlock button:hover{color:var(--txt);border-color:var(--accent)}
+  .adminlock .ok{color:var(--up)}
+  .adminlock .err{color:var(--down)}
+
+  @media(max-width:820px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .chart-wrap{height:230px}
+    .kv{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">⚔</div>
+      <div>
+        <h1>次神：光之觉醒 · 区服战力榜</h1>
+        <p class="sub">
+          数据时间 <b>2026-11-06 14:00</b> ·
+          下次更新 <b id="cd">--:--</b> ·
+          <span class="scope" id="scope">2000-3000 区</span>
+          <span class="admin" id="admin"></span>
+        </p>
+      </div>
+    </div>
+    <div class="adminbar" id="adminbar" hidden></div>
+    <button class="ghost" id="theme">切换明暗</button>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="stale" id="stale" hidden></div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>区战力趋势 <span class="tag">每个点 = 该区前 20 名 PVE 之和 · 点图例可开关</span></h2>
+      <div class="segs">
+        <div class="seg" id="mode">
+          <button data-m="abs" class="on">绝对战力</button>
+          <button data-m="pct">涨幅 %</button>
+        </div>
+      </div>
+    </div>
+    <div class="chart-wrap"><svg id="chart"></svg></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>区服榜 <span class="tag" id="cnt"></span></h2>
+      <div class="tools">
+        <button type="button" id="mysrv" class="chip" hidden></button>
+        <input type="search" id="q" placeholder="搜索区号 / 玩家 / 公会">
+        <button type="button" class="linkbtn" id="reset">重置筛选</button>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:60px">名次</th>
+            <th style="width:56px">变化</th>
+            <th style="width:150px" class="sortable on" data-k="num">区服<span class="arw">▼</span></th>
+            <th style="width:190px" class="sortable" data-k="sum">PVE 区战力<span class="arw">▼</span></th>
+            <th style="width:150px" class="sortable" data-k="pvp">PVP 区战力<span class="arw">▼</span></th>
+            <th style="width:150px" class="sortable" data-k="top1">区冠 PVE<span class="arw">▼</span></th>
+            <th style="width:150px" class="sortable" data-k="top1_pvp">区冠 PVP<span class="arw">▼</span></th>
+            <th style="width:110px" class="sortable" data-k="avg">前 20 平均<span class="arw">▼</span></th>
+            <th style="width:76px">上榜</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <div class="pages" id="pages"></div>
+      <div class="pages">
+        <span class="pinfo" id="pinfo"></span>
+        <select class="ps" id="psize">
+          <option value="25">每页 25</option>
+          <option value="50" selected>每页 50</option>
+          <option value="100">每页 100</option>
+          <option value="0">全部</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>运行记录 <span class="tag" id="runtag">仅管理员可见</span></h2></div>
+    <div class="runs" id="runs"></div>
+  </div>
+
+  <footer>由 power-rank 自动生成 · 每次抓取自动重写本页面 · 无外部依赖，可离线打开</footer>
+</div>
+
+<div class="mask" id="mask">
+  <div class="dcard" id="dcard"></div>
+</div>
+
+<script id="payload" type="application/json" data-full="0" data-parts="[&quot;https://cdn.jsdelivr.net/gh/jzihao38-dotcom/power-rank@gh-pages/data/20261106T142558/servers_1.json&quot;]" data-chunks="1">{"title":"次神：光之觉醒 · 区服战力榜","generated_at":"2026-11-06T14:25:58","snapshot_ts":"2026-11-06T14:00:00+08:00","next_run_at":"2026-11-06T15:00:00+08:00","prev_ts":"2026-11-06T11:00:00+08:00","source":"asp","site_updated":"2026/11/6","server_range":"2000-3000 区","per_server":20,"my_server":2593,"kpis":{"servers":997,"players":11920,"total_pve":348378924,"avg_server":349427,"delta_pve":0},"servers":[{"server":"2001","num":2001,"sum":683463,"sum_label":"147ZI","pvp":81831,"pvp_label":"912CD","top1":38065,"top1_label":"103AM","top1_name":"苍澜💕饼饼不困","top1_pvp":4941,"top1_pvp_label":"945E","top1_pvp_name":"苍澜💕饼饼不困","avg":34173,"count":20,"dsum":0,"players":[{"name":"苍澜💕饼饼不困","rsvr":1,"guild":"苍澜✨虎啸","pve":38065,"pve_label":"103AM","pvp":4941,"pvp_label":"945E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/TELI44gIVsT3rvAEPvzbS7AxeALk6ibL53q1Q5czqZMbRQGBk2bDvFjicmibbnRfTcNJW4ibPqlPHtfTlHjuRcAVC40faLN6dQCAu3STIdNtao0/132","area":"香港","player_id":"","has_detail":true},{"name":"散仙·西门","rsvr":2,"guild":"散仙","pve":35174,"pve_label":"209AJ","pvp":4124,"pvp_label":"128E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/VrR5DtTFghfC7mfjIWCTMU6ib1sFA0q8Zznia4fyicvasUH6dsFaT0Q2wvVV0E2CXkS7pTN3CrQd39OCxa83faDVutoRnrNPRMjSTH5r02x68I/132","area":"浙江","player_id":"","has_detail":true},{"name":"豹豹啊","rsvr":3,"guild":"苍澜✨虎啸","pve":34981,"pve_label":"16AJ","pvp":4037,"pvp_label":"41E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEL40gx2hNv4GSdE1mTQBDic6emVTmvDACQ4Ppeeby6o1NMOVA22QH28fKRzuDBzAxGNkHgVkIT2TquHnO7FfGsN86KicI14IxLtiaiabTp5eLWGLA/132","area":"重庆","player_id":"","has_detail":true},{"name":"呦呦呦","rsvr":4,"guild":"苍澜✨虎啸","pve":34966,"pve_label":"1AJ","pvp":4057,"pvp_label":"61E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/L8nrP2hWJ0ibHUMJ4rU5cRpbghg3icxuhsTKmAyXbeC56AX9RCeOHHbGnicJbvaxJN4gUbRj6V32bXyp7sbWnYZ52yFGJTtUFc5UwiapAI9gsXc/132","area":"广东","player_id":"","has_detail":true},{"name":"春风若有怜花意","rsvr":5,"guild":"邪修","pve":34185,"pve_label":"219AI","pvp":4052,"pvp_label":"56E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/wr0SJ19OscJHw1KWLHcOaBr4AvnAKaa0NbOVnf4uKrP27iccalEjibXA2BMepXadfXgJr3PY2M8ZgWewkr0K4CGMCPbUVpo7AibibWaJGsgGqn0/132","area":"江西","player_id":"","has_detail":true},{"name":"GP🚑爱静","rsvr":6,"guild":"极道☯极乐净土","pve":34055,"pve_label":"89AI","pvp":4042,"pvp_label":"46E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/ibo2BPicibiar13Km27wY2d85ZbUok7F7x2u2T1YcJBtO1fE6ug8PFRqqNjQIewcxEcfZbzfjGoFqlpt39KibZQvPZZlpFfCrpiaoib2AMtmTPUdEc/132","area":"上海","player_id":"","has_detail":true},{"name":"醉里挑灯看剑","rsvr":7,"guild":"无人问津","pve":34053,"pve_label":"87AI","pvp":4038,"pvp_label":"42E","dpve":0,"avatar":"http://cs.xiaozhuli.cc/img/defaultavatar.png","area":"北京","player_id":"","has_detail":true},{"name":"孟婆·来碗醒酒汤","rsvr":8,"guild":"苍澜✨虎啸","pve":34000,"pve_label":"34AI","pvp":4056,"pvp_label":"60E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/wzLyOlTmiaXYELIhWgqmUb9ZztlgVScZN5icNazIanTjegTfasbQF8BCPWB9LobQEyY13IXKJOv7zQ4AWiakR496hK5IJeLm5LnlZqGiaELCqYA/132","area":"广东","player_id":"","has_detail":true},{"name":"白露","rsvr":9,"guild":"苍澜✨虎啸","pve":33989,"pve_label":"23AI","pvp":4065,"pvp_label":"69E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTIJLcxzVLbpbcZTyQInR4dv2cShEz5w4ZeNQC2kkAMyDBOXdllxmK5gMerwUnGRvImKvWZDe4jG9g/132","area":"安徽","player_id":"","has_detail":true},{"name":"凌凯","rsvr":10,"guild":"散仙","pve":33989,"pve_label":"23AI","pvp":4064,"pvp_label":"68E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/32S5mBXTRekqRWRz9vI6Qju8iakpGggHdUqVLSV3fp40iakgPibnbBcQvs1KhC5icoQbcIcibAKNiarBA0LBzLTIDtFkRxlUa4c9ic9u36YMfq90T8/132","area":"贵州","player_id":"","has_detail":true},{"name":"汤","rsvr":11,"guild":"苍澜✨虎啸","pve":33975,"pve_label":"9AI","pvp":4029,"pvp_label":"33E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEJ5LX7C1a4jRZwgebHZ6L8TD0ZMRb7nZOP4M7q5UtnsHYFL8WJaD4Nmk1T9Ws8D7KPcBNZG1gPLOiblSGpGicW0agica1B2XnSAcf5jAcpysMesg/132","area":"广东","player_id":"","has_detail":true},{"name":"散仙•李七夜","rsvr":12,"guild":"散仙","pve":33971,"pve_label":"5AI","pvp":4038,"pvp_label":"42E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEKJXoVHB5suicHvezPt5fbYO4hIPjla2GH7waViaFLcHvBmJ8x17tDrYFXlw1hNVxsEUV4b4SnKqtE7UicV2fh4kw4aSkZLD3MW4fxeWdrtNiaRsw/132","area":"其他地区","player_id":"","has_detail":true},{"name":"三只鹌鹑","rsvr":13,"guild":"米斯卡莫斯卡！","pve":33969,"pve_label":"3AI","pvp":4066,"pvp_label":"70E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/oFuicJx7MiaDS0iaW3svJSmkgs8kLZjwrz3mjF4GWbc6YMwWWDHicwp3HdHPRJyTqTsUNAMvibPxYia9bbuugeYLXbhg/132","area":"福建","player_id":"","has_detail":true},{"name":"邪修♋养你","rsvr":14,"guild":"邪修","pve":33967,"pve_label":"1AI","pvp":4061,"pvp_label":"65E","dpve":0,"avatar":"https://thirdqq.qlogo.cn/qqapp/1112306964/CA7369732387CC425E17A41D1B13D939/100","area":"海南","player_id":"","has_detail":true},{"name":"爽歪歪","rsvr":15,"guild":"苍澜✨虎啸","pve":33967,"pve_label":"1AI","pvp":4030,"pvp_label":"34E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEKnW2FIicafG5svTAZJXicWO78UIkTv0CoXznia3O346BujcofIYfj4cw0icnW7Fy48ShV8Q3J7QzLGffibIV6LFFicCFU9z8GxkqibYxBTbtuejVxVg/132","area":"上海","player_id":"","has_detail":true},{"name":"散仙•橘子","rsvr":16,"guild":"散仙","pve":33632,"pve_label":"665AH","pvp":4027,"pvp_label":"31E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEKpoEmT4ggeQTHaPrZ3zY04rdPwhHa2B5ZvnyQ5lrlAtwq0yWf9c61aicUUMAayf7wc5H8icyVMXjCQUSQf3beEpbibibjDmATfqS88gkxM309libg/132","area":"广东","player_id":"","has_detail":true},{"name":"邪修♋老六","rsvr":17,"guild":"邪修","pve":33255,"pve_label":"288AH","pvp":4045,"pvp_label":"49E","dpve":0,"avatar":"https://thirdqq.qlogo.cn/qqapp/1112306964/F3D7133869C12F73D5A99D5D020A7D90/100","area":"海南","player_id":"","has_detail":true},{"name":"极道☯道之家","rsvr":18,"guild":"极道☯极乐净土","pve":33139,"pve_label":"172AH","pvp":4024,"pvp_label":"28E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaELHWR2sv29ejNAWBz0oOVS6ocIgG8xKfE346pcK9WRf8Ak11PxHxszREJKzSkpOYwKqPps5R4Vp6EnqHvqx5Yaszq5QN7WGX4AYj8OwyozXyw/132","area":"福建","player_id":"","has_detail":true},{"name":"邪修♋退休人","rsvr":19,"guild":"邪修","pve":33087,"pve_label":"120AH","pvp":4020,"pvp_label":"24E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/QPqldEtceF2ApjMgcBvBTp7HkRicVOfCHFobz7hdPTGWy618W5c3MCxJTgUzUmoe4b8ARAtJ9YW1sepln6rcicq4icibyst96ibkYZOfOCice1uM8/132","area":"广东","player_id":"","has_detail":true},{"name":"邪修♍噬魂","rsvr":20,"guild":"米斯卡莫斯卡！","pve":33044,"pve_label":"77AH","pvp":4015,"pvp_label":"19E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaELaPXGves8uJTYia7MibTzPwhHsKwyhMib4x21JtReorC4gNGTYic7zTxiavgjtV2TC5o5oED9wfYu0zsjwh0rw9fRahVos2qEiaBaj3c41lRGGUmsw/132","area":"广东","player_id":"","has_detail":true}],"rank":1,"rk":0},{"server":"2151","num":2151,"sum":643550,"sum_label":"194XU","pvp":79659,"pvp_label":"738CB","top1":37054,"top1_label":"91AL","top1_name":"雄鹰","top1_pvp":4601,"top1_pvp_label":"605E","top1_pvp_name":"雄鹰","avg":32177,"count":20,"dsum":0,"players":[{"name":"雄鹰","rsvr":1,"guild":"圣域❄️诸神天团","pve":37054,"pve_label":"91AL","pvp":4601,"pvp_label":"605E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/aweme_default_avatar.png.jpeg?from=3782654143","area":"湖南","player_id":"","has_detail":true},{"name":"","rsvr":2,"guild":"暂无公会","pve":36937,"pve_label":"973AK","pvp":4326,"pvp_label":"330E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_38c2e069e9b7052191c3ea697bae49a1.jpeg?from=3782654143","area":"浙江","player_id":"","has_detail":true},{"name":"虚无☯彩虹🌈","rsvr":3,"guild":"圣域❄️诸神天团","pve":36399,"pve_label":"435AK","pvp":4281,"pvp_label":"285E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/mosaic-legacy_241c20005d2b5b490fa75.jpeg?from=3782654143","area":"广西","player_id":"","has_detail":true},{"name":"虚无☯庄生","rsvr":4,"guild":"初来☯虚无","pve":34969,"pve_label":"4AJ","pvp":4084,"pvp_label":"88E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/ZpyUHS4FbYJcWhnJStty5VOghApCfN0OmWajkrnnu2IoBMiceAptuLHCC9D50p3rzKzCNqq5ibY6GYS6jnbZrC34FoZBeXMQKZ0VY9Anz4xjE/132","area":"其他地区","player_id":"","has_detail":true},{"name":"酷酷的小王子44","rsvr":5,"guild":"圣域﷼无双天团","pve":34967,"pve_label":"2AJ","pvp":4075,"pvp_label":"79E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/vghsr3WlSQibbqywQ27Scw4jNRHd0e9DynB12vVVqZhKYvK4cmkLIKoy0n7kibCu8Uf9Qa7VCNnDZzglgbYWCaZg/132","area":"上海","player_id":"","has_detail":true},{"name":"君临🔱普渡众生","rsvr":6,"guild":"君临🔱梦境","pve":34386,"pve_label":"420AI","pvp":4042,"pvp_label":"46E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c000-ce_owDPIMAA2ADh09IihPVaCnABAd1ABMi5PAEiT.jpeg?from=3782654143","area":"浙江","player_id":"","has_detail":true},{"name":"虚无☯练气","rsvr":7,"guild":"初来☯虚无","pve":32022,"pve_label":"54AG","pvp":4014,"pvp_label":"18E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c000-ce_oMeHg85fOAjsMxAgARaQARTwzmvXQMgufffIAO.jpeg?from=3782654143","area":"浙江","player_id":"","has_detail":true},{"name":"虚无☯天意","rsvr":8,"guild":"初来☯虚无","pve":32001,"pve_label":"33AG","pvp":4010,"pvp_label":"14E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_30a7a86d83067c6590d4125adf130e53.jpeg?from=3782654143","area":"山东","player_id":"","has_detail":true},{"name":"寻仙✮小葫芦","rsvr":9,"guild":"初来☯虚无","pve":31971,"pve_label":"3AG","pvp":4012,"pvp_label":"16E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Q3auHgzwzM5icg9wa2eHfbVfxicicKuUHZkTWZfqIOKjrrFdsy4F6P4VSFPY3iasfthuO8YHdoVDk91qD2WicpRZx6Q/132","area":"湖南","player_id":"","has_detail":true},{"name":"寻仙✮问柳","rsvr":10,"guild":"圣域❄️诸神天团","pve":31162,"pve_label":"193AF","pvp":4008,"pvp_label":"12E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_o8azfCggLANANDKREAAWhNrzNZ6uyIAGzALegv.jpeg?from=3782654143","area":"江苏","player_id":"","has_detail":true},{"name":"永恒💙笔知所谓","rsvr":11,"guild":"圣域﷼无双天团","pve":31073,"pve_label":"104AF","pvp":4010,"pvp_label":"14E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c001_oYYA6QQflpMAscAflXADW8YE8eQAE8QHfVIfUO.jpeg?from=3782654143","area":"重庆","player_id":"","has_detail":true},{"name":"永恒~李先喊","rsvr":12,"guild":"君临🔱炸天帮","pve":31066,"pve_label":"97AF","pvp":3084,"pvp_label":"87D","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/OO9iaoU3WyWIibCO8WXdYhgbXSCAt8K0NDq8hSUOznIv78YzZD6GVefZecuc3b0qXibL0wyicfwdNEwiaRo5icOOehRpDNWqiahK1vP6BMCRnhwSvA/132","area":"北京","player_id":"","has_detail":true},{"name":"团结屯🌲木木","rsvr":13,"guild":"团结屯🌲","pve":30996,"pve_label":"27AF","pvp":3066,"pvp_label":"69D","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEK5oNnuyERfaYNWIVQxPV71U8CU2RkmnbQ2FJvTziaAzcOibv1pTGibHxpt6cd20iaNZdMC3JUkxoGppKQuq3pDcfjCOk4ufkmHUtuyx1uT6AhOWw/132","area":"其他地区","player_id":"","has_detail":true},{"name":"寻仙✮赵灵儿","rsvr":14,"guild":"圣域❄️诸神天团","pve":30987,"pve_label":"18AF","pvp":4008,"pvp_label":"12E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c001_d3064dc45eb94f97a1517d54dc5021c1.jpeg?from=3782654143","area":"广东","player_id":"","has_detail":true},{"name":"永恒🇨🇳会长","rsvr":15,"guild":"圣域﷼无双天团","pve":30972,"pve_label":"3AF","pvp":4007,"pvp_label":"11E","dpve":0,"avatar":"http://cs.xiaozhuli.cc/img/defaultavatar.png","area":"广东","player_id":"","has_detail":true},{"name":"绝对⚡小咔乐咪","rsvr":16,"guild":"彼岸🔥彼岸","pve":29972,"pve_label":"2AE","pvp":4010,"pvp_label":"14E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLInibeqoBKszeARDia4G1flbg8yCVHXUz344c3YTBkLbZKeicYx36fmKCkGUibGzNOicZicXlxAFkWQ4tA/132","area":"河南","player_id":"","has_detail":true},{"name":"寻仙✮老王","rsvr":17,"guild":"暂无公会","pve":29273,"pve_label":"302AD","pvp":4004,"pvp_label":"8E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_127a2aff39404fcaafdbb02dfa8f22b0.jpeg?from=3782654143","area":"江苏","player_id":"","has_detail":true},{"name":"无争♉Hl","rsvr":18,"guild":"圣域﷼无双天团","pve":29191,"pve_label":"220AD","pvp":4007,"pvp_label":"11E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/mosaic-legacy_3791_5035712059.jpeg?from=3782654143","area":"其他地区","player_id":"","has_detail":true},{"name":"硬帮帮🌟挂三档","rsvr":19,"guild":"乌萨奇热血","pve":29180,"pve_label":"209AD","pvp":4007,"pvp_label":"11E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Q3auHgzwzM5zC2Cp8CBSeic3rCrO4yic0qreo4e8TxHW2gHwCibhzic6VXktX31vv312jKib8yKdic06K12ugMrllWNQ/132","area":"云南","player_id":"","has_detail":true},{"name":"往事随风","rsvr":20,"guild":"暂无公会","pve":28972,"pve_label":"1AD","pvp":4003,"pvp_label":"7E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/LXDnJibrkt1ueQ0gj8Ee3icudSONSiciacCTsJ2IicQiaJyoBIFmCrz8T65kpujI4iakic9fcMsBp3YWsZWjalAvoJp0ibayW5PC0aHv2epjvXMicBicA4/132","area":"北京","player_id":"","has_detail":true}],"rank":2,"rk":0},{"server":"2162","num":2162,"sum":643273,"sum_label":"916XT","pvp":79917,"pvp_label":"996CB","top1":35224,"top1_label":"259AJ","top1_name":"扶摇丨大力","top1_pvp":4192,"top1_pvp_label":"196E","top1_pvp_name":"扶摇丨大力","avg":32163,"count":20,"dsum":0,"players":[{"name":"扶摇丨大力","rsvr":1,"guild":"扶摇丨小窝","pve":35224,"pve_label":"259AJ","pvp":4192,"pvp_label":"196E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c000-ce_oI3diLCBIICEgCTEbmemeA3A7AvvTGOeJAhNFZ.jpeg?from=3782654143","area":"广东","player_id":"","has_detail":true},{"name":"扶腰｜大山","rsvr":2,"guild":"扶摇丨逐鹿","pve":35080,"pve_label":"115AJ","pvp":4177,"pvp_label":"181E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/cLWoJ98Hxt1ia12fuGwVMZF7zHia4ibIuu9to1eRFLmH9X4eqLCcdSpmxBvOTCicHqpxe6720icosEibTRdnEf9aH9eJEvibpIVeTgsicbbicfgfC38A/132","area":"浙江","player_id":"","has_detail":true},{"name":"扶摇丨昆","rsvr":3,"guild":"扶摇丨小窝","pve":34986,"pve_label":"21AJ","pvp":4143,"pvp_label":"147E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/BjBOBOYeFBVkUKRZKlNJxqv4d9zLtbUTgAcvJibu25BUcNmORLLpVI2uDTo5e34ekhQbU5rLHGKVe4RRIicV0jjD8yhwkPppxGQ0Bs377W67U/132","area":"广东","player_id":"","has_detail":true},{"name":"扶摇丨天保保","rsvr":4,"guild":"扶摇丨秋风","pve":34970,"pve_label":"5AJ","pvp":4074,"pvp_label":"78E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/f7RGnbFiam6glicM1TqJ11BckXJ5cHqD2rrqaicXAqibtb2WY5sTPCd0icb403JR26ELK8vEkCgRf45kLJDruLhUYPOuhDWUwdJZFs9e5cBh00JE/132","area":"北京","player_id":"","has_detail":true},{"name":"扶摇｜寻欢","rsvr":5,"guild":"扶摇丨秋风","pve":34922,"pve_label":"956AI","pvp":4073,"pvp_label":"77E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/fab0000ab7b7995d1c40.jpeg?from=3782654143","area":"安徽","player_id":"","has_detail":true},{"name":"扶摇丨风止","rsvr":6,"guild":"扶摇丨秋风","pve":33979,"pve_label":"13AI","pvp":4038,"pvp_label":"42E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c000-ce_oYBsEAF8B69AYAA3bAj2nBAqiKavwwMEbiXIP.jpeg?from=3782654143","area":"浙江","player_id":"","has_detail":true},{"name":"扶摇丨W卡卡","rsvr":7,"guild":"扶摇丨秋风","pve":33968,"pve_label":"2AI","pvp":4045,"pvp_label":"49E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEILNwS86WwtoXzL5ia0AoKlolOpUanSLpSTltYcgic83el50e8WGUPzfd6nALTdUWDTOnnHicsKQONPHhAnTwpn3TicVbh0jbNIMbEdSVibE5oJHibg/132","area":"江西","player_id":"","has_detail":true},{"name":"扶摇丨清欢","rsvr":8,"guild":"扶摇丨秋风","pve":32971,"pve_label":"4AH","pvp":4027,"pvp_label":"31E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_c7ba863076d246a95b09ededbc1be06b.jpeg?from=3782654143","area":"四川","player_id":"","has_detail":true},{"name":"扶摇丨兔子","rsvr":9,"guild":"扶摇丨秋风","pve":32001,"pve_label":"33AG","pvp":4009,"pvp_label":"13E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/20ic9dve9ysI3yI8hWrFvZNAfS0znWJQfvdrMmIDDWYfd9HW4GvZOMLRN4YKHVc2FA7icf2ic5IR9VSSEIx2cH74cibdwicJ8jOhDY98booaFD7Q/132","area":"北京","player_id":"","has_detail":true},{"name":"扶摇丨里昂","rsvr":10,"guild":"扶摇丨秋风","pve":31661,"pve_label":"692AF","pvp":4016,"pvp_label":"20E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_ogIAIqYAKCBApg90ojQABFEAtNDw4JAfrfOvtN.jpeg?from=3782654143","area":"湖北","player_id":"","has_detail":true},{"name":"扶摇 | 凉城","rsvr":11,"guild":"扶摇丨秋风","pve":31468,"pve_label":"499AF","pvp":4013,"pvp_label":"17E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_ogaExBhuIANUFBAA6AhixTLAkEAegAiD0IC7Qf.jpeg?from=3782654143","area":"广东","player_id":"","has_detail":true},{"name":"扶摇丨风沚","rsvr":12,"guild":"扶摇丨秋风","pve":30970,"pve_label":"1AF","pvp":4009,"pvp_label":"13E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/LLyKWMqboIgdfkAnpvrMoxOOR3F8P7HicXvDpMYS3oYPQAA6AzibfYagQLtibeng5XAibVicicPht4smdagY17DxyAZ4ictfwdicPAwGY56wAlYQUBc/132","area":"浙江","player_id":"","has_detail":true},{"name":"扶摇丨小佳","rsvr":13,"guild":"扶摇｜少年郎","pve":30970,"pve_label":"1AF","pvp":3059,"pvp_label":"62D","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c000-ce_ocqGI5CAADEeLwAAGpAEfFlzMEeNvQnU9N3kIA.jpeg?from=3782654143","area":"福建","player_id":"","has_detail":true},{"name":"扶摇--三千明","rsvr":14,"guild":"扶摇丨三千州","pve":30397,"pve_label":"427AE","pvp":4013,"pvp_label":"17E","dpve":0,"avatar":"http://cs.xiaozhuli.cc/img/defaultavatar.png","area":"广东","player_id":"","has_detail":true},{"name":"扶摇丨大魔王","rsvr":15,"guild":"扶摇｜少年郎","pve":30183,"pve_label":"213AE","pvp":4008,"pvp_label":"12E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiafSwjk4iajGqX9PsJFhRE3uDZemtnicJHY0ErVo54saPlIFW5koicot8g1ujziaSLuibVTTl6Bibn8yfxX3zMAJHYoib0ibwiaAFtBXAGbcicW5eaehc/132","area":"安徽","player_id":"","has_detail":true},{"name":"扶摇｜塘帆","rsvr":16,"guild":"扶摇丨冬灵馆","pve":30015,"pve_label":"45AE","pvp":4011,"pvp_label":"15E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/0tR4AdhjYaLwZGtVB4ezbcJB3KkKTfZd05hBUUbu5slcyTMGkXmmxeXoHibOmz82qqyrGnqhkmvR7BvKCAGU6BTdzMjz7WaTKffF4vd0MDXQ/132","area":"北京","player_id":"","has_detail":true},{"name":"大貔貅","rsvr":17,"guild":"扶摇丨三千分州","pve":30012,"pve_label":"42AE","pvp":4001,"pvp_label":"5E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/LW1875NbmzrEdxLATztaUUicGiajWYsxMmib2AaQ30Zq3E6jpibwl1eWMKeVY3UEUEbX3icXWiaQJPUYJKUSMgYibxDBQ/132","area":"江苏","player_id":"","has_detail":true},{"name":"潜行者","rsvr":18,"guild":"倚楼听风雨","pve":29994,"pve_label":"24AE","pvp":4001,"pvp_label":"5E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/GhXBVPIdJ8Ds2njGDZ001fPICicH1Qiar4wu80HO33AmYmGpWEZGKMGVAGyyQicXKpMpfTMdjichNgeXCibD21p0CVg/132","area":"河南","player_id":"","has_detail":true},{"name":"扶摇丨雪幻","rsvr":19,"guild":"扶摇丨小窝","pve":29972,"pve_label":"2AE","pvp":4005,"pvp_label":"9E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/9CHBczFBtaPicQSaiaQ0icfdJPmalhlzmnEuyg4EkRiauNaaMTQLMBESndF9mOQmEOQRckIoiazevDv0K9MUSgczssg/132","area":"四川","player_id":"","has_detail":true},{"name":"扶摇丨烟夜","rsvr":20,"guild":"扶摇｜少年郎","pve":29530,"pve_label":"559AD","pvp":4003,"pvp_label":"7E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/FmtazCYApVXIyH7rCNqCcY2LQA13TQuiadaiaG8WFynibo7sRjWfhUuWicqkssBL63SmDgGwCnVEpzrgraTAU60CjnR8U8aatgEdpzZVPjyhwJs/132","area":"河北","player_id":"","has_detail":true}],"rank":3,"rk":0},{"server":"2252","num":2252,"sum":639741,"sum_label":"381XQ","pvp":79374,"pvp_label":"453CB","top1":36973,"top1_label":"10AL","top1_name":"神༒ZZ","top1_pvp":4629,"top1_pvp_label":"633E","top1_pvp_name":"神༒ 小不点、","avg":31987,"count":20,"dsum":0,"players":[{"name":"神༒ZZ","rsvr":1,"guild":"聚神阁","pve":36973,"pve_label":"10AL","pvp":4316,"pvp_label":"320E","dpve":0,"avatar":"http://cs.xiaozhuli.cc/img/defaultavatar.png","area":"其他地区","player_id":"","has_detail":true},{"name":"神༒ 小不点、","rsvr":2,"guild":"青青🌿庄园","pve":36968,"pve_label":"5AL","pvp":4629,"pvp_label":"633E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_f87b20527f6e25804a184e108d040b25.jpeg?from=3782654143","area":"上海","player_id":"","has_detail":true},{"name":"小花生","rsvr":3,"guild":"六道 星陨阁","pve":34967,"pve_label":"2AJ","pvp":4040,"pvp_label":"44E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/cSgv9kiaicoAt96wEAiasgcsJ9icMutr2D8WHFeicOoole4FSMjEicJm8ZRw80VscS5v5wRc9JjHq0DJQtRxBt5Knu7iaH1VlcenM5j5uUADQCqulY/132","area":"广东","player_id":"","has_detail":true},{"name":"神༒塔塔","rsvr":4,"guild":"聚神阁","pve":34310,"pve_label":"344AI","pvp":4059,"pvp_label":"63E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/mosaic-legacy_3792_5112637127.jpeg?from=3782654143","area":"江西","player_id":"","has_detail":true},{"name":"小满🔞晴苒","rsvr":5,"guild":"关山月🌱","pve":33988,"pve_label":"22AI","pvp":4063,"pvp_label":"67E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEJKUViasIIP4ZS2zotBQH8P5jgYIMF11pqZict5AxTy2NdibLUzEjicfY0u7DyEywmKibZS0Tt6YibqXibIZtlhKXwjcVfgLqVkWubgEkDzJbficOHhRA/132","area":"广东","player_id":"","has_detail":true},{"name":"神༒你摸摸别","rsvr":6,"guild":"聚神阁","pve":33970,"pve_label":"4AI","pvp":4043,"pvp_label":"47E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_b86a11d90a1d4a55a86a3718f690f5cb.jpeg?from=3782654143","area":"云南","player_id":"","has_detail":true},{"name":"神༒蚯蚓","rsvr":7,"guild":"聚神阁","pve":33967,"pve_label":"1AI","pvp":4051,"pvp_label":"55E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c000-ce_ocAf1FGOAbo9YD4fIFUE2QA9BbEATqXewAEPEb.jpeg?from=3782654143","area":"海南","player_id":"","has_detail":true},{"name":"一名矿工","rsvr":8,"guild":"六道 星陨阁","pve":33546,"pve_label":"579AH","pvp":4042,"pvp_label":"46E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/j86m223ibibqHvN8wogiakzYzQ5iaMaGReZKcPT0hcsFtVSQ0zXnj53gEeeRBZciaGs8OwfxklL9GIkGyymUQNkibovg/132","area":"江苏","player_id":"","has_detail":true},{"name":"神༒妖姬","rsvr":9,"guild":"聚神阁","pve":32161,"pve_label":"193AG","pvp":4019,"pvp_label":"23E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEL8oTbjh3Js11icOvH42hmeHFejsegUkVwk1Gnicu54SxkIQiaLXIYoUY3f9UJRFOKdxzaI7ic4Bg6ibhyRqHLw2hmddI8Bj6Dice7xnndGicjicyvOdQ/132","area":"广东","player_id":"","has_detail":true},{"name":"神༒女明星的最爱","rsvr":10,"guild":"聚神阁","pve":31972,"pve_label":"4AG","pvp":4015,"pvp_label":"19E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/DYAIOgq83eoQkMEXbsBBmlzYdicxXr9TtX1vsiaMlBhL9nXcicRl5jqqYicTaDkwOicx58wH4yYJhBvUicnmaibazExAOUKKuicQZfFCMkPnHwO9uv0GNkMUnZ1htQ/132","area":"其他地区","player_id":"","has_detail":true},{"name":"神༒落下","rsvr":11,"guild":"聚神阁","pve":30974,"pve_label":"5AF","pvp":4009,"pvp_label":"13E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/5tiblSq8Bmzic0t3lTYMbE8ES2zq57MSONpd0m8MCgXXaicqDQZAdbeZiaQv8M6UfWQ8reaHe7Sibt9s0aicOpgMtXNI5IPERIjDHSkwC6X7P0mfA/132","area":"河北","player_id":"","has_detail":true},{"name":"神༒黑哥","rsvr":12,"guild":"聚神阁","pve":30973,"pve_label":"4AF","pvp":3060,"pvp_label":"63D","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/P3zKGibNNtibdrokwSEO7MVEMhPgTrkHa9UxgsDVs5OwTTfeR6aFDXs5H5TLlWDeLic7BxFoiaHZibdlP6w5Q5uTZmQoWmgjkjoklDssWzsuhU2w/132","area":"山东","player_id":"","has_detail":true},{"name":"青青~小虾米","rsvr":13,"guild":"青青🌿庄园","pve":29976,"pve_label":"6AE","pvp":4009,"pvp_label":"13E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/p1CFkKGYzqibe9671fDibTVMrHDB8Mj5xibWhMGCwYWsknWBg7LDhUVXZ9yofu9uibGhIJKeZU2WVCuibiciawYgu4cX0Onbufd3o8pku83iaEesUYY/132","area":"河北","player_id":"","has_detail":true},{"name":"酷酷的老冬瓜","rsvr":14,"guild":"暗影🥷圣殿","pve":29971,"pve_label":"1AE","pvp":4006,"pvp_label":"10E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaELI6UicERtsRibJBcHCEsiazOaecSL6MsNqbTN8Gia6BBoTic8UO6L2whDicw04fRLJmFeDHhUorVau8FMf47K1befDicYqO7nBU0l2P74yyEEmYO14Q/132","area":"浙江","player_id":"","has_detail":true},{"name":"流年","rsvr":15,"guild":"太初｜神豪","pve":29929,"pve_label":"958AD","pvp":4004,"pvp_label":"8E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c001_8182e3c737dc4dcc905d3bf2fe0c5434.jpeg?from=3782654143","area":"湖南","player_id":"","has_detail":true},{"name":"太初｜听潮","rsvr":16,"guild":"太初｜神豪","pve":29194,"pve_label":"223AD","pvp":4008,"pvp_label":"12E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLKucaJQYlficrJiboLZS44jbtNIKUTaA36vMz3qkfvxW31TF1zN9l8WdbYoLEQZ98wYjFozmC7M1fw/132","area":"江苏","player_id":"","has_detail":true},{"name":"小满🔞小河仙","rsvr":17,"guild":"关山月🌱","pve":29183,"pve_label":"212AD","pvp":3999,"pvp_label":"3E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/CdhiaPlII2pqgqicoA2mibEMnry8W8e0aSC9SKDia54qpA7EzLdibAV0pgrxazwY30hGibpbfT66lAXibzMS2GblgvIYSxiachGOWxSjP0ia83883H9E/132","area":"浙江","player_id":"","has_detail":true},{"name":"老衲","rsvr":18,"guild":"谷雨","pve":28991,"pve_label":"20AD","pvp":3999,"pvp_label":"3E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Dykr41icx4H9E126TcmIKxma0Gj4c7j0F5w1ZXAYrQz948pQ58uUz4zqHE0vy3UibvicakpAqrXUYibMlaMXv8bibgnfBxdoN3I4HRK3ztWic4FdM/132","area":"其他地区","player_id":"","has_detail":true},{"name":"酷酷的发财","rsvr":19,"guild":"影子的太阳","pve":28980,"pve_label":"9AD","pvp":4003,"pvp_label":"7E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/NZ55uMnadKlu32bjEOGvmRiaXsooOH00h4ianPonm7iaI6LUPyxFu3C03ecuGerA0nmDHM4d5ibQiaPPsicia8pslTBRyJYxPm4vZia5rlU1ZXRN36E/132","area":"山东","player_id":"","has_detail":true},{"name":"绯 鸿运","rsvr":20,"guild":"暗影🥷圣殿","pve":28748,"pve_label":"776AC","pvp":3000,"pvp_label":"3D","dpve":0,"avatar":"http://cs.xiaozhuli.cc/img/defaultavatar.png","area":"河北","player_id":"","has_detail":true}],"rank":4,"rk":0},{"server":"2501","num":2501,"sum":639274,"sum_label":"913XP","pvp":80440,"pvp_label":"520CC","top1":36974,"top1_label":"11AL","top1_name":"枕雪✨ᵐᶦᵏᵒ","top1_pvp":4749,"top1_pvp_label":"753E","top1_pvp_name":"枕雪✨ᵐᶦᵏᵒ","avg":31963,"count":20,"dsum":0,"players":[{"name":"枕雪✨ᵐᶦᵏᵒ","rsvr":1,"guild":"枕雪✨冬煦","pve":36974,"pve_label":"11AL","pvp":4749,"pvp_label":"753E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTI5DlmYzC43CNDPj3V9bianB3EOmic1TiawJ2QXbIKPT6Jg5xBrk80AZLRyml9nMWeps3tbqQOuQttfA/132","area":"陕西","player_id":"","has_detail":true},{"name":"枕雪✨ᵐᶦ旭","rsvr":2,"guild":"枕雪✨冬煦","pve":35975,"pve_label":"11AK","pvp":4237,"pvp_label":"241E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c001_31a4a68aa56c4cbf81fc24dcee5b1d8d.jpeg?from=3782654143","area":"山东","player_id":"","has_detail":true},{"name":"枕雪✨悲酥清风","rsvr":3,"guild":"枕雪✨冬煦","pve":34293,"pve_label":"327AI","pvp":4044,"pvp_label":"48E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/wnBrHQjQq7SQsACngPdpeDynxNdLwjYHuW6gDNnorFoXgdk1dI7HfvgJia2WqtXibMEyTYeOxEFSyqbfNKsIEvM7XUZWnhEqXictdqjNg3s0Uw/132","area":"江西","player_id":"","has_detail":true},{"name":"枕雪✨钝刀🔪","rsvr":4,"guild":"枕雪✨冬煦","pve":33097,"pve_label":"130AH","pvp":4037,"pvp_label":"41E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Ez57HXmTBhr8ZFw0xjzt4gwkcxmoBCBSmBESUPzCEtFIeBVYLFIq2ib5ZaSnzxdwo8TYfL9XD3h17ONnicBMnEBwSKm6vGzKpbWn8yhPgMdgA/132","area":"重庆","player_id":"","has_detail":true},{"name":"枕雪✨玉公子","rsvr":5,"guild":"枕雪✨冬煦","pve":33028,"pve_label":"61AH","pvp":4061,"pvp_label":"65E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaELbNic3Ks7tssNfWSicECpMxHcYp9jtaxuzQwyJq0muliaXbWlU4zyONkRASuyj1GcpcqxlCZ3p0pEow/132","area":"其他地区","player_id":"","has_detail":true},{"name":"枕雪✨小知","rsvr":6,"guild":"枕雪💗花园","pve":32982,"pve_label":"15AH","pvp":4037,"pvp_label":"41E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/mosaic-legacy_2cff30004ac20c0fa0dba.jpeg?from=3782654143","area":"江西","player_id":"","has_detail":true},{"name":"枕雪✨百事可乐","rsvr":7,"guild":"枕雪✨冬煦","pve":32969,"pve_label":"2AH","pvp":4070,"pvp_label":"74E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEJ39c9pf7jPWPheOhCZ5jicqz7jO1VTjh09tY4yXtCpSHESTvwibfyicd7ngKcEia5G5mZeM1NVJHdmwQ/132","area":"其他地区","player_id":"","has_detail":true},{"name":"枕雪✨欧派","rsvr":8,"guild":"枕雪✨冬煦","pve":32562,"pve_label":"594AG","pvp":4025,"pvp_label":"29E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEL42wy95DRrNTxickqIOiaVS9dYcpy5AYeOcy9jetcbRaMSeIFneqxFGhJWK3A2ORCsz1KOvez0ASBXx85OibxZhJ0BbsCiblxBGGHgEZsMTquR1Q/132","area":"湖北","player_id":"","has_detail":true},{"name":"枕雪✨LLL","rsvr":9,"guild":"枕雪✨冬煦","pve":32090,"pve_label":"122AG","pvp":4023,"pvp_label":"27E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEJXxUicv2vibTDYf6FTPGdx6Ma9iciablriaUbrZDSLnlPM5ucYVZXTKp52AYF2TpuT1wmceoYXD0tWfMl7D5nyyMUPfYVMBgaiadbfVbY6DeKCfuYw/132","area":"北京","player_id":"","has_detail":true},{"name":"枕雪✨将jion","rsvr":10,"guild":"枕雪✨冬煦","pve":31109,"pve_label":"140AF","pvp":4013,"pvp_label":"17E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/4RbUg72Fe5raCHPibFuMcsPR4CVicBEk9Wib4GgEJCSSqxeykNvCqJ2YWZ3PK3FjI2u4dgjJfwCicpDYx1j5IdicgwS6QhFrlnXYA9ERKGdlFNv4/132","area":"山西","player_id":"","has_detail":true},{"name":"没劲","rsvr":11,"guild":"顺顺顺顺顺！","pve":30974,"pve_label":"5AF","pvp":3052,"pvp_label":"55D","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/K8Xo1DPvO6ge5mwjA669V31pIOStKp0mfVPWq8INTiaf7Kg8mcbibibub0f378uT9Eyh95fVpAjq33kiaVCaM7FR6p94ZVBj0CuZ9VoMPl6enAk/132","area":"陕西","player_id":"","has_detail":true},{"name":"枕雪✨难得","rsvr":12,"guild":"枕雪💗花园","pve":30970,"pve_label":"1AF","pvp":4008,"pvp_label":"12E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEKT4qGpZhF8ouGMVpo7icEicrznMZnHp1uncLlxjaV5RejTgiauEjGRajuMR5VAUZqdrnUqYwZzr8rgZkOAwxmeZzZTBl82eIwP1af9UeHExiaVxg/132","area":"广西","player_id":"","has_detail":true},{"name":"枕雪✨听澜","rsvr":13,"guild":"枕雪✨天行","pve":30828,"pve_label":"858AE","pvp":4015,"pvp_label":"19E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/HWlUWYC9tK7EXVoycc6UGINFrjJ4c9vDOP6icpf87lLfj2AQWpicViboVbNZ62FUQJWlJYFeItH9ncewiapQPjlJficJU8dbQBYk5OFNogVB5TZY/132","area":"重庆","player_id":"","has_detail":true},{"name":"枕雪✨麒麟座","rsvr":14,"guild":"枕雪✨逍遥","pve":30598,"pve_label":"628AE","pvp":4017,"pvp_label":"21E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/YPSe4MsebtDVQllr9plWzIbQQk8JRovVmqy9UKBFhfMlVrama50wQMbiaRpnJgiaVb8m1NFLicLTq9EfW8frTkdQ7rnYordm39yYX1FmYVYqLQ/132","area":"江苏","player_id":"","has_detail":true},{"name":"枕雪✨长发","rsvr":15,"guild":"枕雪✨月轩","pve":30219,"pve_label":"249AE","pvp":4008,"pvp_label":"12E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/AJz0ZqcIEJv2uG2icRJJR77LsyVg1iblOJHA83oicG3FnUbyHfORJia7HoXmkXyb0JeFz6KeeGXtYZPbwwmaM8QpbQ/132","area":"湖南","player_id":"","has_detail":true},{"name":"枕雪✨星海","rsvr":16,"guild":"枕雪✨冬煦","pve":30216,"pve_label":"246AE","pvp":4011,"pvp_label":"15E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEK9dmuITslunbVgnZ8OAF4brar6nLfAlIqiac7yuLnAL2eg1fyIqq9OG3AZ8UFzJuQwn8ABAn8wr1OWZoOU1Cde0xibOeiaqHqsHzfibWRxJpOt9g/132","area":"重庆","player_id":"","has_detail":true},{"name":"酷酷的小王子6","rsvr":17,"guild":"休闲国度","pve":30161,"pve_label":"191AE","pvp":4009,"pvp_label":"13E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c000-ce_ooWYJMxiaJTtldpCAAOAxCqPPK9YiPAEBA1iI.jpeg?from=3782654143","area":"陕西","player_id":"","has_detail":true},{"name":"枕雪✨ふₓ王ᵂ孑","rsvr":18,"guild":"枕雪✨天行","pve":30104,"pve_label":"134AE","pvp":4006,"pvp_label":"10E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEI05j6XX8TYoDUI7RbMyGoH6tqoHZ090XicvjxgSMkxYp0NjyicYF8CE0ciawMEHNG40BH1L0XozosgUq3T5tibq2kpnaULqlUIGFRMglVNoEJEOA/132","area":"广东","player_id":"","has_detail":true},{"name":"枕雪✨云海","rsvr":19,"guild":"枕雪💗花园","pve":30063,"pve_label":"93AE","pvp":4011,"pvp_label":"15E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/07VIZwpL6UmibT8YI1JoJqnNbCxEAgufiac12J5y4jOfc5gum2ZaWiaXvZSEZhvyEjz4V18edB6QunVJSao9VhkfosibyGprltUgSkiaEtYicblII/132","area":"北京","player_id":"","has_detail":true},{"name":"枕雪✨秋","rsvr":20,"guild":"枕雪💗花园","pve":30062,"pve_label":"92AE","pvp":4007,"pvp_label":"11E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEJgpnEFrc2icjUKwrOzicGVugwbBibXm58Rht7RKgrg21lQUPDo07ib5Yp7jgXA9YkOycqpqENycJFmHxp2Bdaxn0cX7QHzMtic3bCO5tZUbgpJNRQ/132","area":"重庆","player_id":"","has_detail":true}],"rank":5,"rk":0},{"server":"2238","num":2238,"sum":638126,"sum_label":"764XO","pvp":76722,"pvp_label":"798BY","top1":36027,"top1_label":"63AK","top1_name":"摘星-x","top1_pvp":4238,"top1_pvp_label":"242E","top1_pvp_name":"摘星-x","avg":31906,"count":20,"dsum":0,"players":[{"name":"摘星-x","rsvr":1,"guild":"摘星","pve":36027,"pve_label":"63AK","pvp":4238,"pvp_label":"242E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Q3auHgzwzM5ssjcXworl3PYM30CUypbG62RU48xEMiate39gunT399MFCUxaKQvdZnsTxQoqyBic0dKKPKwr5GgQ/132","area":"广东","player_id":"","has_detail":true},{"name":"摘星-祁厅长","rsvr":2,"guild":"摘星","pve":35028,"pve_label":"63AJ","pvp":4180,"pvp_label":"184E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/icqSHrYkib8MPKxicdffxBxSTKgypgrIjicGNHwmyS1ic7ianqYID3nllvY2UBVnqtISQgPfAPhF88aTlCCHkTa43Blw/132","area":"广东","player_id":"","has_detail":true},{"name":"摘星–星空","rsvr":3,"guild":"更天集团","pve":33996,"pve_label":"30AI","pvp":4066,"pvp_label":"70E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c000-ce_oYoBvAlAiCIAI3iw0mkAOAofjG8eC8A1tEETYj.jpeg?from=3782654143","area":"北京","player_id":"","has_detail":true},{"name":"Waaagh!","rsvr":4,"guild":"摘星","pve":33974,"pve_label":"8AI","pvp":4061,"pvp_label":"65E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/JsGFCVuFicmRDANLKdmm3OcRCpEQCImc4Xy1Tx5601v6wCv9bXLCqkhuHcQEff5HgKvfnDYJUiaqdUwMTycjhfv4BS6MictoibckKWt1lupDGtI/132","area":"江苏","player_id":"","has_detail":true},{"name":"睿览星河：渡沧溟","rsvr":5,"guild":"更天集团","pve":33971,"pve_label":"5AI","pvp":4055,"pvp_label":"59E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c001_oYfNCReGIIe72chDtGCiD6vD0ILA6IFALAAfQA.jpeg?from=3782654143","area":"广东","player_id":"","has_detail":true},{"name":"凌丶叔只会养猪","rsvr":6,"guild":"摘星","pve":33900,"pve_label":"933AH","pvp":4041,"pvp_label":"45E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/21bHyy3fz3CNDtwV2sUm9cqeicU2BdpExHMVico9LibXLCzfp3jryyMK9c1aGQ1jfHdrbcrkWyoY7ttPmt50QcBNiciaIRMNia88LTGdkEEg5V5Sw/132","area":"北京","player_id":"","has_detail":true},{"name":"爱玩","rsvr":7,"guild":"云想衣裳花想容","pve":33201,"pve_label":"234AH","pvp":4045,"pvp_label":"49E","dpve":0,"avatar":"http://cs.xiaozhuli.cc/img/defaultavatar.png","area":"广东","player_id":"","has_detail":true},{"name":"打更人丶啦啦啦","rsvr":8,"guild":"更天集团","pve":33009,"pve_label":"42AH","pvp":4039,"pvp_label":"43E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEJYo80ugOb6rkbWcl3XkK9mAnicmIduz1fIZ94DZ8vtYgsmXZtw3dOejDVecFN5fDpT66lsWKvhYjMf312bfLjia3aleJPEiazARfNkr74TzxN8Q/132","area":"贵州","player_id":"","has_detail":true},{"name":"睡不醒的阿川","rsvr":9,"guild":"云想衣裳花想容","pve":32765,"pve_label":"797AG","pvp":4026,"pvp_label":"30E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_08a669995db92f287ac28f60c25e0376.jpeg?from=3782654143","area":"其他地区","player_id":"","has_detail":true},{"name":"壹✦贰","rsvr":10,"guild":"云想衣裳花想容","pve":32066,"pve_label":"98AG","pvp":4029,"pvp_label":"33E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEIo1xexCo4wfIcrNhkenWK7aIEcKpjk68vkmXKzRD7z9SQf2y1tKXpz1Iw9WSYia4dMzheyTTfaSahKIqFSpqRU3bdVoibfC4ibuIPu11fyCkhCg/132","area":"广东","player_id":"","has_detail":true},{"name":"打更人丶曼陀罗","rsvr":11,"guild":"更天集团","pve":31012,"pve_label":"43AF","pvp":0,"pvp_label":"","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/SYLnUO2aiaXjCwcVm6erAIE39eQiapre5Xd0LLoRTxr2K2neZKJAic0rT71Lyxa2RfIA9yBgLU4ww9ZSniaPnAF5Kw/132","area":"福建","player_id":"","has_detail":true},{"name":"Z `Yシ","rsvr":12,"guild":"云想衣裳花想容","pve":30973,"pve_label":"4AF","pvp":4017,"pvp_label":"21E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/ymfwCg45P6lcyxGbFm35T5NU0VzzsSKBFbqQzlLEmxicMkQss9Vq8hsV9VGj6XewqJRrpXBHIhjubxTj3uh32KGEkfiaU7zpMe3bGuaBuNiahg/132","area":"河北","player_id":"","has_detail":true},{"name":"X_X骨牲","rsvr":13,"guild":"摘星 凌霄","pve":30436,"pve_label":"466AE","pvp":4011,"pvp_label":"15E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/HXquoTh0dpy0rOFBV1jqHQqKicl8z1zNvBRglUYjJx43S8NwuM93m6m3zYzRL4MXjeR3Q1gsU6iaVPAxstliaUKaX31LrteRlJDWUhYUy67D8M/132","area":"浙江","player_id":"","has_detail":true},{"name":"多财多亿²⁰²⁵","rsvr":14,"guild":"云想衣裳花想容","pve":30084,"pve_label":"114AE","pvp":4004,"pvp_label":"8E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/ibHIJo0UjJnVZpL3xlkiaS47qHnrnibFOX9l21A2Awg5wTgc2ykKy5hyGcL0I31NXjVcaBTVfZTLibHicLKNvRIuTcJ6iaIhfyPSJbC5AjGxCtqiaE/132","area":"陕西","player_id":"","has_detail":true},{"name":"名字不超过七","rsvr":15,"guild":"摘星－揽月","pve":30071,"pve_label":"101AE","pvp":4010,"pvp_label":"14E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/uIWfDRryibMDJFIiaJMmKfetCNJw4083BnrjQN77iaamCpqwnfoDZxaic3HYANEYv4R33ga6PtTSBzHicbs3ULgIaJwJA3qMgZKfE5kydOacOvJE/132","area":"河南","player_id":"","has_detail":true},{"name":"打更人、天蝎座","rsvr":16,"guild":"更天集团","pve":30034,"pve_label":"64AE","pvp":4002,"pvp_label":"6E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEL5LNozqiaESkeZrxW7K4jiaBZtZPxgS5ouAbjey4JFIsXq6iarJPZNMd7B8lbPZMO9WkETRZpfkJKpez6nVVSJV0L75qxR7kKiboRCfyb6ot2Kiag/132","area":"福建","player_id":"","has_detail":true},{"name":"打更人丶再战江湖","rsvr":17,"guild":"更天集团","pve":29981,"pve_label":"11AE","pvp":4013,"pvp_label":"17E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/9abvSXias84QuxR0jU4J6qSPzdo3ibmGSXkXGwEwPIPHXXTHXe9sibNTyL17NdbcbKZ1T07EBUwrqmax3uQ9pTbrw/132","area":"云南","player_id":"","has_detail":true},{"name":"12356","rsvr":18,"guild":"随便玩玩","pve":29745,"pve_label":"774AD","pvp":3881,"pvp_label":"884D","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/kV2VtZ7ohALUI6wxCKG9t65OK9buN8ORYsfPTASjFvdle4qT3e44GeowaRqCzAK0SumD8t1sXiaT5tYzcdAgWmA/132","area":"四川","player_id":"","has_detail":true},{"name":"鹦儿车、大都督","rsvr":19,"guild":"云想衣裳花想容","pve":29224,"pve_label":"253AD","pvp":4004,"pvp_label":"8E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/mosaic-legacy_1724e00020bb4ebc5dbe8.jpeg?from=3782654143","area":"四川","player_id":"","has_detail":true},{"name":"打更人丶肥仔","rsvr":20,"guild":"更天集团","pve":28629,"pve_label":"657AC","pvp":4000,"pvp_label":"4E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/SNRbGMBjbcqgyTQPQPGUGhWib9phetohxcPsm09uVfeibz4dCbFVPmgwN8akrOtUxLC064HAeoFmGP7t9XXNdHPjdC95sPnUyzsel4euib4Kd0/132","area":"江苏","player_id":"","has_detail":true}],"rank":6,"rk":0},{"server":"2141","num":2141,"sum":632346,"sum_label":"978XI","pvp":79717,"pvp_label":"796CB","top1":35063,"top1_label":"98AJ","top1_name":"绝对⚡龙鳞","top1_pvp":4131,"top1_pvp_label":"135E","top1_pvp_name":"绝对⚡龙鳞","avg":31617,"count":20,"dsum":0,"players":[{"name":"绝对⚡龙鳞","rsvr":1,"guild":"绝对⚡火力","pve":35063,"pve_label":"98AJ","pvp":4131,"pvp_label":"135E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/9iaTsWK8TvF8qoaw9RlyKXUB7NLHIpdib0yh2XtoXIv2ibDpTqZLteYXYpL93oJDECQyfLtFT8JKhCx2guicuv9lWHIEcpMQHOSIeearY2XoICk/132","area":"江西","player_id":"","has_detail":true},{"name":"酥✨酥服服","rsvr":2,"guild":"绝对⚡火力","pve":35041,"pve_label":"76AJ","pvp":4100,"pvp_label":"104E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEKSzarMAPjicTccA7HzHPBq07QiaCqVR1HyEicptw84fWBuufibzEvtSicGnjRYeqgLhzSibCE1VkeWQxo3S4wpLJDZNOic1nYUKZUfdcCxDTcIcgVUQ/132","area":"广东","player_id":"","has_detail":true},{"name":"虚无☯起舞","rsvr":3,"guild":"初来☯虚无","pve":34005,"pve_label":"39AI","pvp":4062,"pvp_label":"66E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/qF5P9RCsBavCVkUjuDzyxEhUHlcB9wYZ3koCZpSEeDV3363yfhJ4WEc7iaySQTCZiarYHttub9icGhiatria2kcIYJg/132","area":"江苏","player_id":"","has_detail":true},{"name":"寻仙✮大魔王","rsvr":4,"guild":"圣域❄️诸神天团","pve":33967,"pve_label":"1AI","pvp":4037,"pvp_label":"41E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/qVvjDHianVRrZLicTGLHnOUeBdDmXMxhWyqdicvqG75q1sdNffT6zNNLvicdB9eup2ezvrYQSDes92ef8rqwxuofU6NO5RE2In2qEt2aZ1CHhJY/132","area":"河南","player_id":"","has_detail":true},{"name":"团结屯🌲小D","rsvr":5,"guild":"团结屯🌲","pve":32975,"pve_label":"8AH","pvp":4022,"pvp_label":"26E","dpve":0,"avatar":"http://cs.xiaozhuli.cc/img/defaultavatar.png","area":"安徽","player_id":"","has_detail":true},{"name":"酥✨小天","rsvr":6,"guild":"绝对⚡火力","pve":31988,"pve_label":"20AG","pvp":4021,"pvp_label":"25E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/7Kt7kBRAia6ypuO8ElYjPpbMM7gFNST4QGmaicoy7hd66oQqSVibuEAAXUicf3pvD2ib9vZs26ujQkG1ItdlWz8iaiaAQu4182uvicZQNh1TV2hrJdM/132","area":"江西","player_id":"","has_detail":true},{"name":"虚无☯大德福","rsvr":7,"guild":"圣域❄️诸神天团","pve":31974,"pve_label":"6AG","pvp":4015,"pvp_label":"19E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_f1672d19e9be41caa8e9e60f0aca9054.jpeg?from=3782654143","area":"陕西","player_id":"","has_detail":true},{"name":"酥✨41","rsvr":8,"guild":"绝对⚡火力","pve":31972,"pve_label":"4AG","pvp":4018,"pvp_label":"22E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_a632aa85bfb24d3b9cacc140ca0d8c07.jpeg?from=3782654143","area":"黑龙江","player_id":"","has_detail":true},{"name":"寻仙✮炒粉哥","rsvr":9,"guild":"暂无公会","pve":31970,"pve_label":"2AG","pvp":4018,"pvp_label":"22E","dpve":0,"avatar":"http://cs.xiaozhuli.cc/img/defaultavatar.png","area":"浙江","player_id":"","has_detail":true},{"name":"寻仙✮9527","rsvr":10,"guild":"圣域❄️诸神天团","pve":31451,"pve_label":"482AF","pvp":4005,"pvp_label":"9E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_994fc1ab73bf58c52b8964d3f67df199.jpeg?from=3782654143","area":"河南","player_id":"","has_detail":true},{"name":"萳橘🍊","rsvr":11,"guild":"Air丶听雨轩","pve":31113,"pve_label":"144AF","pvp":4001,"pvp_label":"5E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEJZvzMZFe7YlqWPtNibApqTNPtX5eoicBo0y2O7ZRhG83eV0Nad9lgRuq0mREfiaoUJKoIRsicNYdBMtn0sYNfibeT24icFyqlqSng8eMlfrlaf6IrA/132","area":"其他地区","player_id":"","has_detail":true},{"name":"绝对⚡鹏","rsvr":12,"guild":"乌萨奇热血","pve":30982,"pve_label":"13AF","pvp":4008,"pvp_label":"12E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/e1Z2yedo0piajAFYkC2FppSUibmCQZxjbwDk4yt5fD6hicXX37copGvGHBEt4DJyrGqvZ7icW7iaFbWzMUJSqqdjgTg/132","area":"新疆","player_id":"","has_detail":true},{"name":"心之所向","rsvr":13,"guild":"Air丶听雨轩","pve":30972,"pve_label":"3AF","pvp":4006,"pvp_label":"10E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/eSJU4KmCcktcGu9Y4HPZuhTgQCV0I5pyEO4bt2zq59Jwa8665vcS5gk7kiaAjbNE3fDPXsaRMhhyeS8jklxds9WibYpHWJPAItymc801mloIU/132","area":"其他地区","player_id":"","has_detail":true},{"name":"酥✨梨涡","rsvr":14,"guild":"乌萨奇热血","pve":30867,"pve_label":"897AE","pvp":4005,"pvp_label":"9E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/BrFtW7LVgHd0oGiaZ3QvlQAWmG8sonIChhX1pzOw0YKQrWfWn74hxEOgkSCSQDLtaBwU54ah5jUpfM2WjIrfmqqZSNMD7g8N5iad9t4ealEe0/132","area":"黑龙江","player_id":"","has_detail":true},{"name":"阿尔卑斯","rsvr":15,"guild":"绝对⚡火力","pve":30747,"pve_label":"777AE","pvp":4012,"pvp_label":"16E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Q3auHgzwzM6MWicClo3n6rB0oU9g2q0p4A2V79T4XdUcSsAmgggfgxwAaBczBhJ8ibIicngX433fB2dgEicENgUfHw/132","area":"湖北","player_id":"","has_detail":true},{"name":"无争♑龍","rsvr":16,"guild":"圣域﷼无双天团","pve":30275,"pve_label":"305AE","pvp":4003,"pvp_label":"7E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/GJeHhQSiczur4y8bNbkq2Zgicp0Z7p0mCaGCuVu05Qe5eMaA3exCcPNfk5QM7qDaaSTb8TyjVtZoZKicEqIHaYkaQ/132","area":"河北","player_id":"","has_detail":true},{"name":"Holle♥远方","rsvr":17,"guild":"Hello♥次神","pve":29982,"pve_label":"12AE","pvp":3318,"pvp_label":"321D","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c000-ce_oYA2AfzLDEAqFA1AZ1EDQmEtNCoI7bew2n9u7A.jpeg?from=3782654143","area":"其他地区","player_id":"","has_detail":true},{"name":"虚无的严父","rsvr":18,"guild":"Air丶听雨轩","pve":29971,"pve_label":"1AE","pvp":4001,"pvp_label":"5E","dpve":0,"avatar":"http://cs.xiaozhuli.cc/img/defaultavatar.png","area":"湖北","player_id":"","has_detail":true},{"name":"酷酷的小王子","rsvr":19,"guild":"乌萨奇热血","pve":28973,"pve_label":"2AD","pvp":3932,"pvp_label":"935D","dpve":0,"avatar":"http://cs.xiaozhuli.cc/img/defaultavatar.png","area":"河南","player_id":"","has_detail":true},{"name":"退300块礼物钱","rsvr":20,"guild":"暂无公会","pve":28058,"pve_label":"86AC","pvp":4002,"pvp_label":"6E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_5ed1fe81d47026d17730d5906b782113.jpeg?from=3782654143","area":"其他地区","player_id":"","has_detail":true}],"rank":7,"rk":0},{"server":"2240","num":2240,"sum":630874,"sum_label":"505XH","pvp":81777,"pvp_label":"858CD","top1":37045,"top1_label":"82AL","top1_name":"凌丶吾手译吾心","top1_pvp":4743,"top1_pvp_label":"747E","top1_pvp_name":"凌丶吾手译吾心","avg":31543,"count":20,"dsum":0,"players":[{"name":"凌丶吾手译吾心","rsvr":1,"guild":"摘星－揽月","pve":37045,"pve_label":"82AL","pvp":4743,"pvp_label":"747E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/mosaic-legacy_2d13000074e273458e2e1.jpeg?from=3782654143","area":"广东","player_id":"","has_detail":true},{"name":"云隐.我想抱抱","rsvr":2,"guild":"云隐","pve":36042,"pve_label":"78AK","pvp":4614,"pvp_label":"618E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Q3auHgzwzM4OgpEeOdLYI26bmL827Nosg2kaeialWmcVlQibVHBRWuF3bROdwJb3ibhVBJgngic3qLzeSTlH32Xkzy1mMn3CYZ3g/132","area":"广东","player_id":"","has_detail":true},{"name":"云隐.梆梆不梆梆","rsvr":3,"guild":"云隐","pve":35310,"pve_label":"345AJ","pvp":4209,"pvp_label":"213E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_2848cb9a91bd7c12ae89b8cc8a64bb93.jpeg?from=3782654143","area":"北京","player_id":"","has_detail":true},{"name":"云隐-沧田","rsvr":4,"guild":"云隐","pve":32340,"pve_label":"372AG","pvp":4019,"pvp_label":"23E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/HvyegF1WXVeXPl9vDZ4Rc3Z2xSh1lYxUc7qkg9PRRw5tTWv98ByvuQ586TXaUzgquoC9McocCJc72CgZyPH2vdzjRvWxYH2icPLqduxnTQoI/132","area":"安徽","player_id":"","has_detail":true},{"name":"摘星-睡睡睡","rsvr":5,"guild":"摘星－揽月","pve":32224,"pve_label":"256AG","pvp":4030,"pvp_label":"34E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/mosaic-legacy_31b5d00034fc2e9c807a1.jpeg?from=3782654143","area":"其他地区","player_id":"","has_detail":true},{"name":"云隐.白首不分离","rsvr":6,"guild":"云隐","pve":31970,"pve_label":"2AG","pvp":4023,"pvp_label":"27E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/27gULGP2r90XPahmyibhY0StdtvkgRiaD4yywKj1OY3R4TNVv9VHFGCn7fLiaibLW36rIT5L9RkCGEqwDkrhboPhhg/132","area":"广东","player_id":"","has_detail":true},{"name":"云隐. 以陌☁️","rsvr":7,"guild":"云隐","pve":31970,"pve_label":"2AG","pvp":4018,"pvp_label":"22E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/2j8pxfCNGvSZTaTHr3TTU0ZxCvexF5k6OxmAetjrLCqzvH9jccibZeibuLthgtxuJ3zia3g0W8fibBoXwX8lzickC8YMR7GzUrUr1icxXOSkLI6wg/132","area":"北京","player_id":"","has_detail":true},{"name":"凌丶阿彦","rsvr":8,"guild":"摘星","pve":31970,"pve_label":"2AG","pvp":4018,"pvp_label":"22E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/WCE8cYFmEMicqNEK9WIFU8RryxicaaKndUckONiabUrJPiaP56YCBmHhM29ibiazprpJwnk7b9Y1AzdtyN4TgZ03bNug/132","area":"湖南","player_id":"","has_detail":true},{"name":"云隐.胖胖爱吃瓜","rsvr":9,"guild":"云隐","pve":31969,"pve_label":"1AG","pvp":4014,"pvp_label":"18E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/svP0BEia9Sia0P6HnRrWALY5p2KVtAtZTiatIRvaibXrrxssWbBVyPicPyiaNxiawrIPzgpN9XMgGFa7q0eeumWydSZDnRjUF5LwmgmWVtyfOE3PSk/132","area":"河北","player_id":"","has_detail":true},{"name":"打更人、奥斯卡","rsvr":10,"guild":"更天集团","pve":31088,"pve_label":"119AF","pvp":4021,"pvp_label":"25E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_3d710b7c8a31d77e6edf375494ab360d.jpeg?from=3782654143","area":"其他地区","player_id":"","has_detail":true},{"name":"竹雨青、陌路人","rsvr":11,"guild":"竹雨青三会","pve":30983,"pve_label":"14AF","pvp":4013,"pvp_label":"17E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/sHdnSHmfcHFtico8zs8R6SpoDTU1pVy9kEqibnfR0ATuAVf3TRGfu0rNA6JXYLN8wCfVbgA56C7O9MpRaOslxcIA/132","area":"其他地区","player_id":"","has_detail":true},{"name":"云隐.YFSWR","rsvr":12,"guild":"云隐","pve":30970,"pve_label":"1AF","pvp":4014,"pvp_label":"18E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_45183f84d60f046346d7491e20201736.jpeg?from=3782654143","area":"山西","player_id":"","has_detail":true},{"name":"云隐·龍","rsvr":13,"guild":"云隐","pve":30019,"pve_label":"49AE","pvp":4007,"pvp_label":"11E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_6fc59918ffe042399dc06a9ea43b9559.jpeg?from=3782654143","area":"山西","player_id":"","has_detail":true},{"name":"云隐.寻风","rsvr":14,"guild":"云隐","pve":29978,"pve_label":"8AE","pvp":4006,"pvp_label":"10E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_oU9CXeA3AbNbBHSFcm3SAeCIpAEAIAH1nKp6Dg.jpeg?from=3782654143","area":"浙江","player_id":"","has_detail":true},{"name":"卡托·西卡留斯","rsvr":15,"guild":"随便玩玩","pve":29978,"pve_label":"8AE","pvp":4005,"pvp_label":"9E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/ed2scibf7BQCOPbGwlTARWjKUCsGbibk5ZUMR2rZySHCodibABoqfAWVftuwAJjBu5edKXh6kLxt0ydJq6PwZdLh9X2UJZIQ9J4B6aCqyc3pm8/132","area":"浙江","player_id":"","has_detail":true},{"name":"摘星✨00","rsvr":16,"guild":"摘星 凌霄","pve":29975,"pve_label":"5AE","pvp":4006,"pvp_label":"10E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c000-ce_owBEAAZ4iiAqupAwIeSBnNrnuS0Aiz0NGEtfCR.jpeg?from=3782654143","area":"广东","player_id":"","has_detail":true},{"name":"喜悦✨✨稚梦","rsvr":17,"guild":"喜悦","pve":29647,"pve_label":"676AD","pvp":4005,"pvp_label":"9E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/SRwVDmI2mVf8oUcTpZFalm6pibg3abwCQTvMSZwfIkXVo82F9GpfelDT23Spibk43EMcQF25LR4kNOkRxHzrMsLwvSRvVNzyexoQ0TKmQy9EM/132","area":"黑龙江","player_id":"","has_detail":true},{"name":"摘星-只想摸鱼","rsvr":18,"guild":"摘星 凌霄","pve":29273,"pve_label":"302AD","pvp":4005,"pvp_label":"9E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEIsEWB124y4WE6kXYRVS0q1b58x0ibOEiaKD5gR8nkrT9Az50s58DaqKRpibDQYYiaLHFgT4nLOv1vQDlmCB72L0uUk1vln0ZyxX2LSTykyUibiczWA/132","area":"广东","player_id":"","has_detail":true},{"name":"看不见玉帝","rsvr":19,"guild":"云隐","pve":29119,"pve_label":"148AD","pvp":4003,"pvp_label":"7E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Q3auHgzwzM777Uf4VicvlMJTXRc5qYfp4ex0UlwhuY9GDv4NP57ONtPhI5oYaj7kbB73ElgzkEKW2iaT2jAAMThQ/132","area":"江西","player_id":"","has_detail":true},{"name":"喜悦✨✨宝儿姐","rsvr":20,"guild":"喜悦","pve":29004,"pve_label":"33AD","pvp":4004,"pvp_label":"8E","dpve":0,"avatar":"https://p9.huoshanimg.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_20945edf1c6785b074420e9d7ccf5470.jpeg?from=3782654143","area":"湖南","player_id":"","has_detail":true}],"rank":8,"rk":0},{"server":"2186","num":2186,"sum":630418,"sum_label":"49XH","pvp":78760,"pvp_label":"838CA","top1":36969,"top1_label":"6AL","top1_name":"神💫初八","top1_pvp":4748,"top1_pvp_label":"752E","top1_pvp_name":"神💫初八","avg":31520,"count":20,"dsum":0,"players":[{"name":"神💫初八","rsvr":1,"guild":"封神💫星庭","pve":36969,"pve_label":"6AL","pvp":4748,"pvp_label":"752E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_ef0b6ff1c28b7591de9f8e3dd7210464.jpeg?from=3782654143","area":"黑龙江","player_id":"","has_detail":true},{"name":"神💫战远方","rsvr":2,"guild":"封神💫星庭","pve":35971,"pve_label":"7AK","pvp":4311,"pvp_label":"315E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/l1eG09GX8y0RGqCJMgmXyBab1PIYicLVTkABFUNnh4ONM1nkIeS0URV3h4ojfDBiaZ9liaFiaMXaBvpBunG7W4AAkQ/132","area":"辽宁","player_id":"","has_detail":true},{"name":"神💫油条1","rsvr":3,"guild":"封神💫初夏","pve":33968,"pve_label":"2AI","pvp":4086,"pvp_label":"90E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/FcBPxicY9WQ5hJib86qUSkXzczeWb2Za0WyHXRVEdX5uJeInWeRicDjVITAVibic39vibtqSwhQibMuzdSD8wjzjv58WCEFWaHOzmicfxydXxe9sGGI/132","area":"江苏","player_id":"","has_detail":true},{"name":"神💫无定风波","rsvr":4,"guild":"封神💫軍團","pve":33000,"pve_label":"33AH","pvp":4026,"pvp_label":"30E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/FrRwLvn97ibxic9OcrnEfsNUExAHwBtwzicM26oSZ21JL4ibibUTUEa63az1jrNIsnjZ3tIjlxlcj4DhEmu0n9db1Z7QnEnsMVV2chdGowwyXHeg/132","area":"湖南","player_id":"","has_detail":true},{"name":"小王子","rsvr":5,"guild":"肝帝保护协会","pve":32973,"pve_label":"6AH","pvp":4032,"pvp_label":"36E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/mosaic-legacy_30f6b000a475369e453cf.jpeg?from=3782654143","area":"河北","player_id":"","has_detail":true},{"name":"神💫大鹏展翅","rsvr":6,"guild":"封神💫天地","pve":32971,"pve_label":"4AH","pvp":4030,"pvp_label":"34E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/14UyfY9cvSqZB1xzjdgF0cgHU3KF5WmbNKpPmRE35H6OowHeUzdEYXMyysiaSHdnS0Qk4mIepva5eFRYs7eoiaSWLJSvjnibmQ9iaQT8keV9rzQ/132","area":"北京","player_id":"","has_detail":true},{"name":"买了佛了","rsvr":7,"guild":"肝帝保护协会","pve":31970,"pve_label":"2AG","pvp":4007,"pvp_label":"11E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c001_ocqBB9pEhQAdLAf3fj361eAmuAIYQEGDMIc7AL.jpeg?from=3782654143","area":"江苏","player_id":"","has_detail":true},{"name":"神💫棍","rsvr":8,"guild":"封神💫天地","pve":31516,"pve_label":"547AF","pvp":3119,"pvp_label":"122D","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_5d46e0d42b5b40aa8526694b96ea3e08.jpeg?from=3782654143","area":"甘肃","player_id":"","has_detail":true},{"name":"魑魍魅魉","rsvr":9,"guild":"肝帝保护协会","pve":30981,"pve_label":"12AF","pvp":4015,"pvp_label":"19E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_96a668a957b7463c94a91ea7ab701f28.jpeg?from=3782654143","area":"湖南","player_id":"","has_detail":true},{"name":">瓜牛<","rsvr":10,"guild":"肝帝保护协会","pve":30975,"pve_label":"6AF","pvp":4007,"pvp_label":"11E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEI0BoibAI3uWCxiaw2wz5iaQ115Jfewv6F8WiaTr7TFk6MfeSjNVGK6JDAN84p25qErHDicrbturec0UXV8bN6Sao8yO5tib4fs4X43KqpFxmia53khA/132","area":"广东","player_id":"","has_detail":true},{"name":"神💫清殇","rsvr":11,"guild":"封神💫天地","pve":30972,"pve_label":"3AF","pvp":4008,"pvp_label":"12E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/OkruR6rn4Vb5k5txgdjuIyUHREYhn3n8YyGtpKf9GvYaxaf2AF0m18bb1OvhGlFsgfw3ic7zNc9lDPicWAOIyJtGyPV0lqCTuLG25pLMVaybM/132","area":"河北","player_id":"","has_detail":true},{"name":"神💫助攻","rsvr":12,"guild":"封神💫軍團","pve":30175,"pve_label":"205AE","pvp":3228,"pvp_label":"231D","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/90f200010fb4e0b7720f.jpeg?from=3782654143","area":"福建","player_id":"","has_detail":true},{"name":"神💫风伯","rsvr":13,"guild":"封神💫浴皇牛逼","pve":29991,"pve_label":"21AE","pvp":3099,"pvp_label":"102D","dpve":0,"avatar":"http://cs.xiaozhuli.cc/img/defaultavatar.png","area":"浙江","player_id":"","has_detail":true},{"name":"神💫小桥流水","rsvr":14,"guild":"封神💫霸道","pve":29990,"pve_label":"20AE","pvp":4007,"pvp_label":"11E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_5fa3f6ee28af4eac972fa961e3da3b8f.jpeg?from=3782654143","area":"浙江","player_id":"","has_detail":true},{"name":"神💫老郑","rsvr":15,"guild":"607127号公会","pve":29987,"pve_label":"17AE","pvp":4003,"pvp_label":"7E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTIu4soafrYZvzcJYez11cSSm6JYGuOEvibtbyhgkWrQZnfL0PkL1mIGJhngx6o5VS9dLMQLPia7l8pw/132","area":"四川","player_id":"","has_detail":true},{"name":"神💫福星高照","rsvr":16,"guild":"封神💫浴皇牛逼","pve":29972,"pve_label":"2AE","pvp":4010,"pvp_label":"14E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c000-ce_oUaNvAApsEMYVBpM77izyiCAIPs3Azyx2Zz1A.jpeg?from=3782654143","area":"安徽","player_id":"","has_detail":true},{"name":"神💫愿","rsvr":17,"guild":"封神💫初夏","pve":29971,"pve_label":"1AE","pvp":4008,"pvp_label":"12E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_0d0f736e30570ca840c272489619201b.jpeg?from=3782654143","area":"江苏","player_id":"","has_detail":true},{"name":"神💫彩飞扬","rsvr":18,"guild":"开心就好","pve":29971,"pve_label":"1AE","pvp":4007,"pvp_label":"11E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c001_ogbmGH9AAfnH66uDQW82CIAwAeAUQgCqSxADEA.jpeg?from=3782654143","area":"安徽","player_id":"","has_detail":true},{"name":"神💫渔歌唱晚","rsvr":19,"guild":"暂无公会","pve":29066,"pve_label":"95AD","pvp":4008,"pvp_label":"12E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_oECNIIJQG8ee2ItuAIe4AhAAZLebApCDmoW2lb.jpeg?from=3782654143","area":"广东","player_id":"","has_detail":true},{"name":"月亮奇迹","rsvr":20,"guild":"607127号公会","pve":29029,"pve_label":"58AD","pvp":4001,"pvp_label":"5E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTKrqZ4GvWeCvs0E0mhtxyun28YyUoydHJvknMuxhRxfTUdjOl7mnw2D9N4aibibGmLD5g6U2PicWsuRw/132","area":"河北","player_id":"","has_detail":true}],"rank":9,"rk":0},{"server":"2174","num":2174,"sum":628401,"sum_label":"30XF","pvp":80758,"pvp_label":"838CC","top1":37001,"top1_label":"38AL","top1_name":"扶摇丨山河","top1_pvp":4424,"top1_pvp_label":"428E","top1_pvp_name":"扶摇丨山河","avg":31420,"count":20,"dsum":0,"players":[{"name":"扶摇丨山河","rsvr":1,"guild":"扶摇丨星穹可莉","pve":37001,"pve_label":"38AL","pvp":4424,"pvp_label":"428E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c001_oQgAAhEQyAAjgM8HAzCEC8Y3fAFECINevA2x49.jpeg?from=3782654143","area":"福建","player_id":"","has_detail":true},{"name":"扶摇丨小乖","rsvr":2,"guild":"扶摇丨逐鹿","pve":34966,"pve_label":"1AJ","pvp":4072,"pvp_label":"76E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTKibqX2nPhYJDT46BKoucJ020ZayBAdZxRId6DEe7EWDThwHRgleLSmwDzsb4NibrbBcBOto49ibQ6xg/132","area":"江苏","player_id":"","has_detail":true},{"name":"扶摇丨白菜菜","rsvr":3,"guild":"中原逐鹿","pve":34006,"pve_label":"40AI","pvp":4056,"pvp_label":"60E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEL9uscEF5faTxmJSI8j84k0C3gIfV0znRFxMwok6JgMOa6qx3cY2syjNg2t3iac72ic76MoDvjRNZ4CAnDCs8IRMX9gQibaqcicH8eHM4DU4Dia5pA/132","area":"其他地区","player_id":"","has_detail":true},{"name":"逐鹿丨李富贵","rsvr":4,"guild":"扶摇丨逐鹿","pve":33991,"pve_label":"25AI","pvp":4040,"pvp_label":"44E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c001_ocAtAPCjBADziAjAekiNhbEXcCNIGS5g6jerqA.jpeg?from=3782654143","area":"河南","player_id":"","has_detail":true},{"name":"扶摇丨飘飘","rsvr":5,"guild":"扶摇丨逐鹿","pve":32980,"pve_label":"13AH","pvp":4032,"pvp_label":"36E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c001_e5fda90f6ffb4cb18eae1f2166fefd44.jpeg?from=3782654143","area":"陕西","player_id":"","has_detail":true},{"name":"扶摇丨霖博","rsvr":6,"guild":"扶摇丨逐鹿","pve":31984,"pve_label":"16AG","pvp":4021,"pvp_label":"25E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_osAAYBzjfAJMjTa7AeX1ACdAgMsEICANgySQ0h.jpeg?from=3782654143","area":"山西","player_id":"","has_detail":true},{"name":"扶摇丨哏啾啾","rsvr":7,"guild":"扶摇丨逐鹿","pve":31980,"pve_label":"12AG","pvp":4017,"pvp_label":"21E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/ISemrZorAxNxDxVvU0EKBicO4wqHfJ0a2BYyylO2wUGgkTPH3Baq7Ej7CUXiaxXAibJUialmw9Gs8PUy07HvYUczHN9ZYDibgy0ichJrFjmCibiaJFA/132","area":"江苏","player_id":"","has_detail":true},{"name":"扶摇丨七喜","rsvr":8,"guild":"扶摇丨三千州","pve":31973,"pve_label":"5AG","pvp":4014,"pvp_label":"18E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_oQHAoGAAeFHVACDAgnqm9VgAcEElfAwDIYdyYE.jpeg?from=3782654143","area":"陕西","player_id":"","has_detail":true},{"name":"扶摇丨清芸","rsvr":9,"guild":"扶摇丨三千州","pve":31323,"pve_label":"354AF","pvp":4012,"pvp_label":"16E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c000-ce_oEPJXEAXl7AAAVzBDMBIyiqNJTcVNa7PsIdAi.jpeg?from=3782654143","area":"浙江","player_id":"","has_detail":true},{"name":"扶摇｜幸🌟","rsvr":10,"guild":"扶摇｜少年郎","pve":31186,"pve_label":"217AF","pvp":4012,"pvp_label":"16E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/7rhHIIIVc0CAC6MJr8H8bymSdrtfWVJcvnwV6Qq73G3GqicGwPQb1pQp1iceVmiczM3RoDyW8iaCxiaP7A28b61jiccg/132","area":"山东","player_id":"","has_detail":true},{"name":"刚刚好","rsvr":11,"guild":"扶摇丨花间酒","pve":30974,"pve_label":"5AF","pvp":4014,"pvp_label":"18E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/mosaic-legacy_311a50003793be3bbf0d7.jpeg?from=3782654143","area":"山西","player_id":"","has_detail":true},{"name":"扶摇丨海鲜和土豆","rsvr":12,"guild":"扶摇丨至高无上","pve":30305,"pve_label":"335AE","pvp":4012,"pvp_label":"16E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/JRsX9GSGiaPeaNnha9aXIX5UK7y3F5IVzJazzels69Yy5nnv8WWRJhFHnibC4Q9Hv4dd9xwbySAibLtRmSXndlXb672BV6LXoj4FR6L21bWV1s/132","area":"浙江","player_id":"","has_detail":true},{"name":"扶摇 | 一瞥","rsvr":13,"guild":"暂无公会","pve":30025,"pve_label":"55AE","pvp":4006,"pvp_label":"10E","dpve":0,"avatar":"https://p26.douyinpic.com/aweme/100x100/aweme-avatar/mosaic-legacy_3791_5070639578.jpeg?from=3782654143","area":"江苏","player_id":"","has_detail":true},{"name":"惊鸿-老王","rsvr":14,"guild":"扶摇丨星穹可莉","pve":29977,"pve_label":"7AE","pvp":4008,"pvp_label":"12E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaEKibicP7DxOgOjqxrp8WuDNAoE69N0lmyV7ODxNUkovialjQniaSdJG32aLQpkeLTziawDCyTQ9rTtBEoAgtMpOf1ib8HYTVwlZhyACFFF9cHnyOvjQ/132","area":"重庆","player_id":"","has_detail":true},{"name":"扶摇丨龙珠","rsvr":15,"guild":"扶摇丨逐鹿","pve":29976,"pve_label":"6AE","pvp":4009,"pvp_label":"13E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/HLDjKFe3k6H5EOa8dcGuSa497SwHayWkSOzn96BaqoUzDcLwmvKsFoc9zPBicyImB3DRWEQSvxttbia4yniaBNW4Jsicd5GVvhJ4jNEHWl6A1fc/132","area":"浙江","player_id":"","has_detail":true},{"name":"半支烟","rsvr":16,"guild":"扶摇丨小窝","pve":29974,"pve_label":"4AE","pvp":4003,"pvp_label":"7E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813_1dd2c871638b4641aee4c8ef2a9301e0.jpeg?from=3782654143","area":"湖南","player_id":"","has_detail":true},{"name":"很多很多余","rsvr":17,"guild":"扶摇丨花间酒","pve":29973,"pve_label":"3AE","pvp":4006,"pvp_label":"10E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-avt-0015_c2e78de6cf0b67ad182b714c452009b2.jpeg?from=3782654143","area":"江苏","player_id":"","has_detail":true},{"name":"扶摇丨记得","rsvr":18,"guild":"暂无公会","pve":29647,"pve_label":"676AD","pvp":4003,"pvp_label":"7E","dpve":0,"avatar":"https://p11.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c000-ce_o0BbEAcdB3ibSAAIUAKOCBAqiCaPn0MH5iWIP.jpeg?from=3782654143","area":"浙江","player_id":"","has_detail":true},{"name":"扶摇丨判官","rsvr":19,"guild":"秦云逐梦","pve":28973,"pve_label":"2AD","pvp":4000,"pvp_label":"4E","dpve":0,"avatar":"https://p3.douyinpic.com/aweme/100x100/aweme-avatar/tos-cn-i-0813c001_ogAi6OwxnIASPcIkAweANM9sfCbVmAAEDgg8AH.jpeg?from=3782654143","area":"山西","player_id":"","has_detail":true},{"name":"扶摇丨111","rsvr":20,"guild":"暂无公会","pve":27187,"pve_label":"214AB","pvp":3997,"pvp_label":"1E","dpve":0,"avatar":"https://thirdwx.qlogo.cn/mmopen/vi_32/pqEEtshtVD08rgVB7N6rmf2IR2wjqNvpv7hoMkm5hJjKkzOjzT0AAuaNbBibjEWSOpxRqo51wNMXeLcicPII8evg/132","area":"河南","player_id":"","has_detail":true}],"rank":10,"rk":0}],"series":{"labels":["2026-10-28T16:00:00+08:00","2026-10-28T17:00:00+08:00","2026-10-29T10:00:00+08:00","2026-10-29T15:00:00+08:00","2026-10-30T16:00:00+08:00","2026-10-30T17:00:00+08:00","2026-11-02T08:00:00+08:00","2026-11-02T09:00:00+08:00","2026-11-02T10:00:00+08:00","2026-11-02T11:00:00+08:00","2026-11-02T14:00:00+08:00","2026-11-02T15:00:00+08:00","2026-11-02T16:00:00+08:00","2026-11-02T19:00:00+08:00","2026-11-02T20:00:00+08:00","2026-11-02T21:00:00+08:00","2026-11-03T09:00:00+08:00","2026-11-03T10:00:00+08:00","2026-11-03T11:00:00+08:00","2026-11-03T12:00:00+08:00","2026-11-03T13:00:00+08:00","2026-11-03T14:00:00+08:00","2026-11-03T15:00:00+08:00","2026-11-03T16:00:00+08:00","2026-11-04T08:00:00+08:00","2026-11-04T09:00:00+08:00","2026-11-04T10:00:00+08:00","2026-11-04T11:00:00+08:00","2026-11-04T12:00:00+08:00","2026-11-04T13:00:00+08:00","2026-11-04T14:00:00+08:00","2026-11-04T15:00:00+08:00","2026-11-04T16:00:00+08:00","2026-11-04T19:00:00+08:00","2026-11-04T20:00:00+08:00","2026-11-05T09:00:00+08:00","2026-11-05T10:00:00+08:00","2026-11-05T11:00:00+08:00","2026-11-05T14:00:00+08:00","2026-11-05T15:00:00+08:00","2026-11-05T16:00:00+08:00","2026-11-05T19:00:00+08:00","2026-11-05T20:00:00+08:00","2026-11-06T09:00:00+08:00","2026-11-06T10:00:00+08:00","2026-11-06T11:00:00+08:00","2026-11-06T14:00:00+08:00"],"items":[{"key":"2001","name":"2001 区","sum":[680221,680221,680221,680221,680221,680221,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,682447,683463,683463,683463,683463]},{"key":"2151","name":"2151 区","sum":[642384,642384,642384,642384,642384,642384,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643029,643550,643550,643550,643550]},{"key":"2162","name":"2162 区","sum":[639661,639661,639661,639661,639661,639661,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,642760,643273,643273,643273,643273]},{"key":"2252","name":"2252 区","sum":[635335,635335,635335,635335,635335,635335,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,638344,639741,639741,639741,639741]},{"key":"2501","name":"2501 区","sum":[636162,636162,636162,636162,636162,636162,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,637836,639274,639274,639274,639274]},{"key":"2238","name":"2238 区","sum":[635111,635111,635111,635111,635111,635111,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,637015,638126,638126,638126,638126]}]},"runs":[{"ts":"2026-11-06T11:00:00+08:00","ok":1,"rows":11920,"secs":884.55,"error":""},{"ts":"2026-11-06T10:00:00+08:00","ok":1,"rows":11920,"secs":870.58,"error":""},{"ts":"2026-11-06T09:00:00+08:00","ok":1,"rows":11920,"secs":899.84,"error":""},{"ts":"2026-11-05T20:00:00+08:00","ok":1,"rows":11910,"secs":858.04,"error":""},{"ts":"2026-11-05T19:00:00+08:00","ok":1,"rows":11910,"secs":992.07,"error":""},{"ts":"2026-11-05T16:00:00+08:00","ok":1,"rows":11910,"secs":1245.02,"error":""},{"ts":"2026-11-05T15:00:00+08:00","ok":1,"rows":11910,"secs":1363.69,"error":""},{"ts":"2026-11-05T14:00:00+08:00","ok":1,"rows":11910,"secs":1243.41,"error":""},{"ts":"2026-11-05T11:00:00+08:00","ok":1,"rows":11910,"secs":1243.94,"error":""},{"ts":"2026-11-05T10:00:00+08:00","ok":1,"rows":11910,"secs":1263.17,"error":""},{"ts":"2026-11-05T09:00:00+08:00","ok":1,"rows":11910,"secs":946.22,"error":""},{"ts":"2026-11-04T20:00:00+08:00","ok":1,"rows":11910,"secs":1227.89,"error":""}],"refresh_seconds":300,"admin":"8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92","img_base":"https://cdn.jsdelivr.net/gh/jzihao38-dotcom/power-rank@gh-pages","detail_base":"https://cdn.jsdelivr.net/gh/jzihao38-dotcom/power-rank@gh-pages/data/20261106T142558/detail/"}</script>
+<script>
+(function(){
+  var D = {};
+  try { D = JSON.parse(document.getElementById('payload').textContent); }
+  catch(e){ D = {}; }
+  var PALETTE = ['#5b8cff','#28c76f','#ffc861','#ff5b6e','#a06bff','#22d3ee','#f472b6','#a3e635'];
+  var PER = D.per_server || 20;
+
+  /* ---------- 数字格式 ---------- */
+  function fmt(n){
+    if(n===null||n===undefined) return '—';
+    var a=Math.abs(n);
+    if(a>=1e8) return (n/1e8).toFixed(2).replace(/\.?0+$/,'')+'亿';
+    if(a>=1e4) return (n/1e4).toFixed(1).replace(/\.0$/,'')+'万';
+    return String(Math.round(n));
+  }
+  function axisFmt(n){
+    if(n===null||n===undefined) return '';
+    var a=Math.abs(n);
+    if(a>=1e8) return (n/1e8).toFixed(2).replace(/\.?0+$/,'')+'亿';
+    if(a>=1e4) return (n/1e4).toFixed(1).replace(/\.0$/,'')+'万';
+    return Math.round(n).toLocaleString('en-US');
+  }
+  function full(n){
+    if(n===null||n===undefined) return '—';
+    return Math.round(n).toLocaleString('en-US');
+  }
+  function signed(n){
+    if(n===null||n===undefined||n===0) return '';
+    return (n>0?'+':'')+fmt(n);
+  }
+  function signedFull(n){
+    if(n===null||n===undefined) return '新';
+    if(n===0) return '±0';
+    return (n>0?'+':'')+full(n);
+  }
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  /* ---------- 管理员验证 ---------- */
+  var isAdmin = false, runTag = document.getElementById('runtag');
+  function sha256Hex(s){
+    function rr(x,n){ return (x>>>n)|(x<<(32-n)); }
+    var K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+      0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+      0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+      0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+      0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+      0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+      0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+      0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+    var H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    var bytes=unescape(encodeURIComponent(s));
+    var m=[], i;
+    for(i=0;i<bytes.length;i++) m.push(bytes.charCodeAt(i)&255);
+    var bitlen=bytes.length*8;
+    m.push(0x80);
+    while(m.length%64!==56) m.push(0);
+    m.push(0,0,0,0,(bitlen>>>24)&255,(bitlen>>>16)&255,(bitlen>>>8)&255,bitlen&255);
+    var w=new Array(64), o;
+    for(o=0;o<m.length;o+=64){
+      for(i=0;i<16;i++) w[i]=(m[o+i*4]<<24)|(m[o+i*4+1]<<16)|(m[o+i*4+2]<<8)|m[o+i*4+3];
+      for(i=16;i<64;i++){
+        var s0=rr(w[i-15],7)^rr(w[i-15],18)^(w[i-15]>>>3);
+        var s1=rr(w[i-2],17)^rr(w[i-2],19)^(w[i-2]>>>10);
+        w[i]=(w[i-16]+s0+w[i-7]+s1)|0;
+      }
+      var r=[H[0],H[1],H[2],H[3],H[4],H[5],H[6],H[7]];
+      for(i=0;i<64;i++){
+        var S1=rr(r[4],6)^rr(r[4],11)^rr(r[4],25);
+        var ch=(r[4]&r[5])^((~r[4])&r[6]);
+        var t1=(r[7]+S1+ch+K[i]+w[i])|0;
+        var S0=rr(r[0],2)^rr(r[0],13)^rr(r[0],22);
+        var maj=(r[0]&r[1])^(r[0]&r[2])^(r[1]&r[2]);
+        var t2=(S0+maj)|0;
+        r[7]=r[6]; r[6]=r[5]; r[5]=r[4]; r[4]=(r[3]+t1)|0;
+        r[3]=r[2]; r[2]=r[1]; r[1]=r[0]; r[0]=(t1+t2)|0;
+      }
+      for(i=0;i<8;i++) H[i]=(H[i]+r[i])|0;
+    }
+    var out='';
+    for(i=0;i<8;i++){ var x=(H[i]>>>0).toString(16); while(x.length<8) x='0'+x; out+=x; }
+    return out;
+  }
+  function verifyAdmin(){
+    var input = document.getElementById('adminpw');
+    var box = document.getElementById('adminbar');
+    if(!input || !box) return;
+    if(sha256Hex(input.value) === (D.admin||'')){
+      isAdmin = true;
+      var d = String(D.site_updated||'').trim();
+      var m = d.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+      var show = m ? (+m[2]) + '/' + (+m[3]) : d;
+      var days = NaN;
+      if(m){ days = Math.floor((Date.now() - new Date(+m[1], +m[2]-1, +m[3]).getTime())/86400000); }
+      document.getElementById('admin').innerHTML = '数据源 <b>' + esc(D.source||'') + '</b>'
+        + (show ? ' · 站点数据 <b' + (days >= 2 ? ' style="color:var(--down)"' : '') + '>'
+          + esc(show) + '</b>' + (days >= 2 ? '（' + days + ' 天前）' : '') : '');
+      box.innerHTML = '<span class="ok">✓ 管理员已验证</span>'
+        + '<span class="tag">数据源与更新信息仅你可见；刷新后需重新输入</span>';
+      runTag.textContent = '管理员可见';
+      renderRuns();
+      box.hidden = false;
+      if(input){ input.value = ''; }
+    }else{
+      var pb = box;
+      pb.innerHTML = '<span class="err">密码不对</span>';
+      pb.hidden = false;
+    }
+  }
+  var adminbar = document.getElementById('adminbar');
+  adminbar.hidden = false;
+  adminbar.innerHTML = '<span class="adminlock">'
+    + '<input type="password" id="adminpw" placeholder="管理员密码">'
+    + '<button type="button" id="adminbtn">验证</button></span>';
+  document.getElementById('adminbtn').addEventListener('click', verifyAdmin);
+  document.getElementById('adminpw').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') verifyAdmin();
+  });
+  function srvNum(v){
+    var m = String(v==null?'':v).match(/\d+/g);
+    return m ? parseInt(m[m.length-1],10) : null;
+  }
+
+  /* ---------- KPI ---------- */
+  (function(){
+    var k = D.kpis, d = k.delta_pve;
+    document.getElementById('kpis').innerHTML = [
+      '<div class="kpi"><div class="k">在榜区数</div><div class="v">'+k.servers+'</div>'
+        +'<div class="t">每个区取前 '+PER+' 名</div></div>',
+      '<div class="kpi"><div class="k">上榜玩家总战力</div><div class="v">'+fmt(k.total_pve)+'</div>'
+        +'<div class="t">'+full(k.players)+' 人在榜</div></div>',
+      '<div class="kpi"><div class="k">平均区战力</div><div class="v">'+fmt(k.avg_server)+'</div>'
+        +'<div class="t">前 '+PER+' 名合计的平均</div></div>',
+      '<div class="kpi"><div class="k">本次增长</div><div class="v">'
+        +(d>0?'+':'')+fmt(d)+'</div>'
+        +'<div class="t">'+(D.prev_ts? '对比 '+D.prev_ts.slice(11,16)+' 那一份' : '首次抓取，再跑一轮就有对比')+'</div></div>'
+    ].join('');
+  })();
+
+  /* ---------- 站点数据日期：仅管理员可见（内容由 verifyAdmin 填充） ---------- */
+
+  /* ---------- 数据新鲜度提示 ---------- */
+  (function(){
+    var el = document.getElementById('stale');
+    var age = (Date.now() - Date.parse(D.snapshot_ts||'')) / 60000;   // 分钟
+    var lastRun = (D.runs||[])[0] || {};
+    var stale = !isNaN(age) && age > 150;                             // 超过 2.5 小时没新数据
+    if(!isAdmin){ el.hidden = true; return; }
+
+    // 抓取本身正常、但站点数据好几天没动：这种情况比抓取失败更常见，也要说清楚
+    var sd = String(D.site_updated||'').match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+    var siteDays = sd ? Math.floor((Date.now() - new Date(+sd[1], +sd[2]-1, +sd[3]).getTime())/86400000) : NaN;
+    if(siteDays >= 2){
+      el.innerHTML = '<b>站点数据没有更新</b> · 榜单是 '
+        + esc((+sd[2]) + '/' + (+sd[3])) + ' 的（' + siteDays + ' 天前）'
+        + ' · 本页每小时都在正常抓取，但上游站主还没出新数据';
+      el.hidden = false;
+      return;
+    }
+
+    if(!stale && lastRun.ok !== 0) return;
+
+    // 把技术性报错翻译成一句人话
+    var raw = String(lastRun.error || '');
+    var why;
+    if(raw.indexOf('站点不可达') >= 0)        why = '抓取站点连不上（多半是代理软件没开）';
+    else if(raw.indexOf('抓取残缺') >= 0)     why = '上次只抓到很少的区，判定为残缺，没有覆盖本页';
+    else if(raw)                              why = raw.split('\n')[0].slice(0, 100);
+    else                                      why = '已 ' + Math.floor(age/60) + ' 小时没有新数据';
+
+    el.innerHTML = '<b>数据不是最新的</b> · 页面停留在 '
+      + esc((D.snapshot_ts||'').slice(5,16).replace('T',' '))
+      + ' 那一份 · ' + esc(why);
+    el.hidden = false;
+  })();
+
+  /* ---------- 倒计时 ---------- */
+  (function(){
+    var el = document.getElementById('cd');
+    if(!D.next_run_at){ el.textContent='—'; return; }
+    function tick(){
+      var t = Date.parse(D.next_run_at) - Date.now();
+      if(isNaN(t)){ el.textContent='—'; return; }
+      if(t <= 0){ el.textContent='即将更新'; return; }
+      var s = Math.floor(t/1000), m = Math.floor(s/60);
+      el.textContent = m>0 ? (m+' 分 '+(s%60)+' 秒后') : (s+' 秒后');
+    }
+    tick(); setInterval(tick, 1000);
+  })();
+
+  /* ---------- 运行记录：仅管理员可见 ---------- */
+  function renderRuns(){
+    var box = document.getElementById('runs');
+    if(!isAdmin){
+      box.innerHTML = '<span class="dim">数据源与运行记录仅管理员可见</span>';
+      return;
+    }
+    box.innerHTML = (D.runs||[]).map(function(r){
+      var cls = r.ok ? 'ok' : 'bad';
+      var t = (r.ts||'').slice(5,16).replace('T',' ');
+      return '<span class="run '+cls+'">'+t+' · '+(r.rows||0)+' 条 · '+(r.secs||0)+'s'
+        + (r.ok?'':' · '+esc((r.error||'').slice(0,40))) +'</span>';
+    }).join('') || '<span class="dim">还没有运行记录</span>';
+  }
+  renderRuns();
+
+  /* ---------- 趋势图 ---------- */
+  var chartMode = 'abs';
+  var active = {};
+  var svg = document.getElementById('chart');
+
+  function drawChart(){
+    var items = D.series.items || [], labels = D.series.labels || [];
+    var on = items.filter(function(it){ return active[it.key] !== false; });
+    var W = svg.clientWidth || 900, H = svg.clientHeight || 290;
+    var padL = 62, padR = 18, padT = 14, padB = 26;
+    var iw = Math.max(10, W - padL - padR), ih = Math.max(10, H - padT - padB);
+
+    var vals = [];
+    on.forEach(function(it){
+      var base = null;
+      (it.sum||[]).forEach(function(v){
+        if(v==null) return;
+        if(base===null) base = v;
+        if(chartMode==='pct'){ if(base) vals.push((v/base-1)*100); }
+        else vals.push(v);
+      });
+    });
+    if(!vals.length){ svg.innerHTML=''; return; }
+    var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+    if(mn===mx){ mn -= 1; mx += 1; }
+    var pad = (mx-mn)*0.12;
+    mn -= pad; mx += pad;
+    if(Math.min.apply(null, vals) >= 0) mn = Math.max(0, mn);
+
+    function X(i){ return padL + (labels.length<=1 ? iw/2 : i*iw/(labels.length-1)); }
+    function Y(v){ return padT + ih - (v-mn)/(mx-mn)*ih; }
+
+    var s = [];
+    // 网格 + y 轴刻度
+    for(var g=0; g<=4; g++){
+      var v = mn + (mx-mn)*g/4, y = Y(v);
+      s.push('<line x1="'+padL+'" y1="'+y+'" x2="'+(padL+iw)+'" y2="'+y+'"/>');
+      var txt = chartMode==='pct' ? (v.toFixed(2)+'%') : axisFmt(v);
+      s.push('<text x="'+(padL-10)+'" y="'+(y+3.5)+'" text-anchor="end">'+esc(txt)+'</text>');
+    }
+    // x 轴标签：最多 6 个
+    var step = Math.max(1, Math.ceil(labels.length/6));
+    labels.forEach(function(t,i){
+      if(i%step && i!==labels.length-1) return;
+      s.push('<text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle">'+esc((t||'').slice(5,16).replace('T',' '))+'</text>');
+    });
+
+    on.forEach(function(it){
+      var d = [], base = null;
+      (it.sum||[]).forEach(function(v,i){
+        if(v==null) return;
+        if(base===null) base = v;
+        var y = chartMode==='pct' ? (base? (v/base-1)*100 : 0) : v;
+        d.push(X(i)+','+Y(y));
+      });
+      if(d.length<2){                      // 只有一个数据点时画个点，别让图看着是空的
+        if(d.length===1){
+          var c0 = d[0].split(',');
+          s.push('<circle cx="'+c0[0]+'" cy="'+c0[1]+'" r="3.5" fill="'+PALETTE[items.indexOf(it) % PALETTE.length]+'"/>');
+        }
+        return;
+      }
+      var color = PALETTE[items.indexOf(it) % PALETTE.length];
+      s.push('<polyline fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linejoin="round" points="'+d.join(' ')+'"/>');
+      var last = d[d.length-1].split(',');
+      s.push('<circle cx="'+last[0]+'" cy="'+last[1]+'" r="3" fill="'+color+'"/>');
+    });
+
+    if(labels.length < 2){
+      s.push('<text x="'+(padL+iw/2)+'" y="'+(padT+ih/2-10)+'" text-anchor="middle" class="hint">'
+        + '现在只有 1 个数据点 —— 再过一小时就有趋势线了</text>');
+    }
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    svg.innerHTML = '<g class="grid">'+s.join('')+'</g>';
+  }
+
+  function renderLegend(){
+    var box = document.getElementById('legend');
+    box.innerHTML = (D.series.items||[]).map(function(it,i){
+      var c = PALETTE[i % PALETTE.length];
+      var on = active[it.key] !== false;
+      return '<span class="chip'+(on?' on':'')+'" data-k="'+esc(it.key)+'" style="color:'+c+'">'
+        + '<i class="dot"></i>'+esc(it.name)+'</span>';
+    }).join('');
+    box.querySelectorAll('.chip').forEach(function(el){
+      el.addEventListener('click', function(){
+        var k = el.getAttribute('data-k');
+        active[k] = (active[k]===false);
+        renderLegend(); drawChart();
+      });
+    });
+  }
+  renderLegend(); drawChart();
+  window.addEventListener('resize', function(){ drawChart(); });
+  document.getElementById('mode').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b) return;
+    this.querySelectorAll('button').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on'); chartMode = b.getAttribute('data-m'); drawChart();
+  });
+
+  /* ---------- 区服榜 ---------- */
+  var sortKey = 'num', page = 1, pageSize = 50;
+  var splitPending = !!(document.getElementById('payload').getAttribute('data-parts'));
+  var mySrv = D.my_server ? Number(D.my_server) : null;
+
+  if(mySrv){
+    var chip = document.getElementById('mysrv');
+    chip.hidden = false;
+    chip.textContent = '只看我的区 ' + mySrv;
+    chip.addEventListener('click', function(){
+      var on = !chip.classList.contains('on');
+      chip.classList.toggle('on', on);
+      document.getElementById('q').value = on ? String(mySrv) : '';
+      page = 1; sortAndRender();
+    });
+  }
+
+  function filtered(){
+    var q = document.getElementById('q').value.trim().toLowerCase();
+    var list = (D.servers||[]).slice();
+    if(q){
+      list = list.filter(function(s){
+        if(String(s.num).indexOf(q) >= 0) return true;
+        if((s.server||'').toLowerCase().indexOf(q) >= 0) return true;
+        return (s.players||[]).some(function(p){
+          return (p.name||'').toLowerCase().indexOf(q) >= 0
+              || (p.guild||'').toLowerCase().indexOf(q) >= 0;
+        });
+      });
+    }
+    list.sort(function(a,b){
+      var x = a[sortKey], y = b[sortKey];
+      if(x === y) return a.num - b.num;
+      return sortKey==='num' ? (x - y) : (y - x);
+    });
+    return list;
+  }
+
+  function renderPager(total, pages){
+    var box = document.getElementById('pages');
+    document.getElementById('pinfo').textContent = '第 ' + page + ' / ' + pages + ' 页 · 共 ' + total + ' 个区';
+    if(pages <= 1){ box.innerHTML=''; return; }
+    var out = [];
+    function btn(p, label, dis, cls){
+      out.push('<button class="pg'+(cls?' '+cls:'')+'" data-p="'+p+'"'+(dis?' disabled':'')+'>'+label+'</button>');
+    }
+    btn(1,'首页', page===1);
+    btn(page-1,'上一页', page===1);
+    var from = Math.max(1, page-2), to = Math.min(pages, page+2);
+    if(from > 1) out.push('<button class="pg gap" disabled>…</button>');
+    for(var i=from; i<=to; i++) btn(i, String(i), false, i===page?'on':'');
+    if(to < pages) out.push('<button class="pg gap" disabled>…</button>');
+    btn(page+1,'下一页', page===pages);
+    btn(pages,'末页', page===pages);
+    box.innerHTML = out.join('');
+  }
+
+  function sortAndRender(keepPage){
+    var list = filtered();
+    var pages = pageSize>0 ? Math.max(1, Math.ceil(list.length/pageSize)) : 1;
+    if(!keepPage || page > pages) page = Math.min(page, pages) || 1;
+    if(page < 1) page = 1;
+    var slice = pageSize>0 ? list.slice((page-1)*pageSize, page*pageSize) : list;
+
+    // 柱长按全榜最大值归一，翻页不会突然都变满
+    var mxSum = 1, mxTop = 1, mxPvp = 1;
+    (D.servers||[]).forEach(function(s){ mxSum = Math.max(mxSum, s.sum); mxTop = Math.max(mxTop, s.top1); mxPvp = Math.max(mxPvp, s.pvp||0); });
+
+    var tb = document.getElementById('rows');
+    if(!slice.length){
+      tb.innerHTML = '<tr><td colspan="7" class="dim" style="padding:26px 0;text-align:center">'
+      + (splitPending ? '数据加载中…' : '没有匹配的区') + '</td></tr>';
+    } else {
+      tb.innerHTML = slice.map(function(s){
+        var isMe = mySrv !== null && s.num === mySrv;
+        var rk = s.rk;
+        var mv = (rk===null||rk===undefined) ? '<span class="flat">—</span>'
+          : (rk>0 ? '<span class="up">▲'+rk+'</span>' : (rk<0 ? '<span class="down">▼'+(-rk)+'</span>' : '<span class="flat">—</span>'));
+        var d = s.dsum;
+        var cls = d>0?'up':(d<0?'down':'flat');
+        return '<tr data-s="'+esc(s.server)+'"'+(isMe?' class="mine"':'')+'>'
+          + '<td><div class="rk'+(s.rank<=3?' r'+s.rank:'')+'">'+s.rank+'</div></td>'
+          + '<td><span class="mv">'+mv+'</span></td>'
+          + '<td><div class="srvname">'+esc(s.num===null?s.server:s.num+' 区')
+            + (s.server && s.server !== String(s.num) ? '<small>'+esc(s.server)+'</small>' : '')
+            + '</div></td>'
+          + '<td><div class="pw">'+full(s.sum)
+            +'<span class="d '+cls+'">'+(d===null?'新上榜':signedFull(d))+'</span></div>'
+            +'<div class="bar"><i style="width:'+Math.round(s.sum/mxSum*100)+'%"></i></div></td>'
+          + '<td><div class="pw">'+full(s.pvp||0)+'<span class="d dim">PVP 前 '+s.count+' 名合计</span></div>'
+            +'<div class="bar"><i style="width:'+Math.round((s.pvp||0)/mxPvp*100)+'%"></i></div></td>'
+          + '<td><div class="pw">'+esc(s.top1_label)+'<span class="d dim">'+esc(s.top1_name)+'</span></div></td>'
+          + '<td><div class="pw">'+esc(s.top1_pvp_label||'—')+'<span class="d dim">'+esc(s.top1_pvp_name||'')+'</span></div></td>'
+          + '<td class="dim">'+full(s.avg)+'</td>'
+          + '<td class="dim">'+s.count+' 人</td>'
+          + '</tr>';
+      }).join('');
+    }
+
+    document.getElementById('cnt').textContent =
+      '共 ' + list.length + ' 个区 · 按' + ({num:'区号升序', sum:'PVE 区战力', pvp:'PVP 区战力', top1:'区冠 PVE', top1_pvp:'区冠 PVP', avg:'前'+PER+'平均'}[sortKey]) + '排序';
+    renderPager(list.length, pages);
+  }
+
+  document.getElementById('rows').addEventListener('click', function(e){
+    var tr = e.target.closest('tr[data-s]'); if(!tr) return;
+    openServer(tr.getAttribute('data-s'));
+  });
+
+  document.querySelectorAll('th.sortable').forEach(function(th){
+    th.addEventListener('click', function(){
+      document.querySelectorAll('th.sortable').forEach(function(x){ x.classList.remove('on'); });
+      th.classList.add('on');
+      sortKey = th.getAttribute('data-k');
+      page = 1; sortAndRender();
+    });
+  });
+
+  document.getElementById('q').addEventListener('input', function(){ page=1; sortAndRender(); });
+  document.getElementById('reset').addEventListener('click', function(){
+    document.getElementById('q').value = '';
+    var chip = document.getElementById('mysrv');
+    if(chip) chip.classList.remove('on');
+    page = 1; sortAndRender();
+  });
+  document.getElementById('psize').addEventListener('change', function(){
+    pageSize = parseInt(this.value,10) || 0;
+    page = 1; sortAndRender();
+  });
+  document.getElementById('pages').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-p]'); if(!b || b.disabled) return;
+    page = parseInt(b.getAttribute('data-p'),10) || 1;
+    sortAndRender(true);
+  });
+
+  /* ---------- 某个区的详情 ---------- */
+  var mask = document.getElementById('mask'), card = document.getElementById('dcard');
+  function closeCard(){ mask.classList.remove('on'); }
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeCard(); });
+  mask.addEventListener('click', function(e){ if(e.target===mask) closeCard(); });
+
+  function openServer(key){
+    var s = (D.servers||[]).filter(function(x){ return x.server===key; })[0];
+    if(!s) return;
+    var d = s.dsum, cls = d>0?'up':(d<0?'down':'flat');
+    var rows = (s.players||[]).map(function(p){
+      var dd = p.dpve, c2 = dd>0?'up':(dd<0?'down':'flat');
+      var av = p.avatar ? '<img class="pavatar" src="'+esc(p.avatar)+'" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+      return '<tr data-p="'+esc(p.name)+'" data-s="'+esc(s.server)+'">'
+        + '<td class="no">'+p.rsvr+'</td>'
+        + '<td><div class="pcell">'+av
+          + '<div><span class="nm">'+esc(p.name)+'</span>'
+          + (p.area ? '<span class="ar">'+esc(p.area)+'</span>' : '')
+          + '</div></div></td>'
+        + '<td class="dim">'+esc(p.guild||'—')+'</td>'
+        + '<td><div class="pw alpha">'+esc(p.pve_label)+'<span class="d '+c2+'">'
+          +(dd===null?'新上榜':signedFull(dd))+'</span></div></td>'
+        + '<td class="pw alpha">'+esc(p.pvp_label)+'</td></tr>';
+    }).join('');
+    card.innerHTML =
+      '<button class="x" id="cx">×</button>'
+      + '<h3>'+esc(s.num===null?s.server:s.num+' 区')+'</h3>'
+      + '<div class="dsub">区内前 '+s.count+' 名 · '+esc(s.server)+' · 点头像或名字看详情</div>'
+      + '<div class="kv">'
+      +   '<div><span>PVE 区战力（前 '+s.count+' 名合计）</span><b>'+full(s.sum)+'</b></div>'
+      +   '<div><span>PVP 区战力（前 '+s.count+' 名合计）</span><b>'+full(s.pvp||0)+'</b></div>'
+      +   '<div><span>区冠 PVE</span><b>'+esc(s.top1_label)+'</b></div>'
+      +   '<div><span>区冠 PVP</span><b>'+esc(s.top1_pvp_label||'—')+'</b></div>'
+      +   '<div><span>较上次</span><b class="'+cls+'">'+(d===null?'新上榜':signedFull(d))+'</b></div>'
+      + '</div>'
+      + '<table class="roster"><thead><tr><th class="no">#</th><th>玩家</th><th>公会</th>'
+      + '<th>PVE 战力</th><th>PVP 战力</th></tr></thead><tbody>'+rows+'</tbody></table>'
+      + '<div class="dnote">战力按游戏写法显示（1a…999a → 1b）；点空白处或按 Esc 关闭。</div>';
+    mask.classList.add('on');
+    document.getElementById('cx').addEventListener('click', closeCard);
+    card.querySelectorAll('tr[data-p]').forEach(function(tr){
+      tr.addEventListener('click', function(e){
+        e.stopPropagation();
+        openPlayer(s.server, tr.getAttribute('data-p'));
+      });
+    });
+  }
+
+  function openPlayer(srvKey, name){
+    var s = (D.servers||[]).filter(function(x){ return x.server===srvKey; })[0];
+    if(!s) return;
+    var p = (s.players||[]).filter(function(x){ return x.name===name; })[0];
+    if(!p) return;
+    var d = p.detail || {};
+    if(!d || Object.keys(d).length===0){
+      if(p.has_detail && D.detail_base){
+        // 详情懒加载：玩家卡里的高级属性/珍宝没内嵌在列表数据里，点开时按区取一次
+        renderPlayerCard(s, p, d, true);
+        var url = D.detail_base + s.num + '.json';
+        fetch(url, {cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
+          var o = JSON.parse(t);
+          var dd = (o && o[p.name]) || {};
+          renderPlayerCard(s, p, dd, false);
+        }).catch(function(){ renderPlayerCard(s, p, d, false); });
+        return;
+      }
+      renderPlayerCard(s, p, d, false);
+      return;
+    }
+    renderPlayerCard(s, p, d, false);
+  }
+
+  function renderPlayerCard(s, p, d, loading){
+    var attrs = d.attrs || [];
+    var tz = d.treasures || [];
+    var sum = d.summary || {};
+    var av = p.avatar ? '<img src="'+esc(p.avatar)+'" onerror="this.style.display=\'none\'">' : '';
+    var icoBase = D.img_base || '';
+
+    var attHtml = attrs.length ? attrs.map(function(a){
+      return '<div><span>'+esc(a.label)+'</span><b>'+esc(a.value||'—')+'</b></div>';
+    }).join('') : (loading ? '<div class="dim" style="grid-column:1/-1">加载中…</div>' : '<div class="dim" style="grid-column:1/-1">无高级属性数据</div>');
+
+    var tzHtml = tz.map(function(t){
+      var star = parseInt(t.star,10);
+      var starTxt = (star>0 ? '★'.repeat(star) : '') + (t.level_label||t.level||'');
+      var exts = (t.extras||[]).map(function(x){
+        var c = x.color ? String(x.color).toLowerCase() : '';
+        return '<span class="ex ex-' + c + '">' + esc(x.k) + (x.v ? ' ' + esc(x.v) : '') + '</span>';
+      }).join('');
+      var icon = t.icon || '';
+      if(icoBase && icon.indexOf('img/')===0) icon = icoBase + icon;
+      return '<div class="t">'
+        + '<img src="'+esc(icon)+'" loading="lazy" onerror="this.style.visibility=\'hidden\'">'
+        + '<div class="tn">'+esc(t.name||'')+'</div>'
+        + '<div class="tl">'+esc(t.pos||'')+'</div>'
+        + '<div class="st">'+starTxt+'</div>'
+        + '<div class="b">'+esc(t.battr||'')+' <b>'+esc(t.battrval||'')+'</b></div>'
+        + (exts ? '<div class="exs">'+exts+'</div>' : '')
+        + '</div>';
+    }).join('');
+
+    var basicHtml = '';
+    if(sum.basic && sum.basic.length){
+      basicHtml = '<div class="sumline">' + sum.basic.map(function(b){
+        return '<span>'+esc(b.name)+' <b>'+esc(b.val)+'</b></span>';
+      }).join('') + '</div>';
+    }
+
+    var pid = p.player_id || d.player_id || '';
+    card.innerHTML =
+      '<button class="x" id="cx">×</button>'
+      + '<div class="phead">'+av
+      +   '<div><h3>'+esc(p.name)+'</h3>'
+      +   '<div class="pid">' + (p.area ? esc(p.area) + ' · ' : '') + (pid ? 'ID ' + esc(pid) : '') + '</div>'
+      +   '</div></div>'
+      + '<div class="kv">'
+      +   '<div><span>PVE 战力</span><b>'+esc(p.pve_label)+'</b></div>'
+      +   '<div><span>PVP 战力</span><b>'+esc(p.pvp_label)+'</b></div>'
+      +   '<div><span>公会</span><b>'+esc(p.guild||'—')+'</b></div>'
+      + '</div>'
+      + '<div class="sec-t">高级属性 <span class="tag">共 '+attrs.length+' 项</span></div>'
+      + '<div class="attgrid">'+attHtml+'</div>'
+      + '<div class="sec-t">珍宝 <span class="tag">共 '+tz.length+' 件</span></div>'
+      + '<div class="tz">'+tzHtml+'</div>'
+      + (basicHtml ? '<div class="sec-t">珍宝总览</div>'+basicHtml : '')
+      + '<div class="dnote">数据来自站点页面内嵌的详情弹窗参数；点空白处或按 Esc 关闭。</div>';
+    mask.classList.add('on');
+    document.getElementById('cx').addEventListener('click', closeCard);
+  }
+
+  /* ---------- 明暗 ---------- */
+  (function(){
+    var root = document.documentElement;
+    try{
+      var saved = localStorage.getItem('pr-theme');
+      if(saved) root.setAttribute('data-theme', saved);
+    }catch(e){}
+    document.getElementById('theme').addEventListener('click', function(){
+      var next = root.getAttribute('data-theme')==='dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try{ localStorage.setItem('pr-theme', next); }catch(e){}
+    });
+  })();
+
+  sortAndRender();
+
+  /* ---------- 大文件拆分加载：骨架先渲染，数据按块补齐 ---------- */
+  var el = document.getElementById('payload');
+  function afterMerge(){
+    splitPending = false;
+    sortAndRender();
+  }
+  function loadPart(rel){
+    return fetch(rel, {cache:'no-store'}).then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.text();
+    }).then(function(t){
+      var o = JSON.parse(t);
+      if(o.servers){ D.servers = (D.servers||[]).concat(o.servers); }
+      else { for(var k in o){ D[k] = o[k]; } }
+    });
+  }
+  function loadParts(list, done){
+    var i = 0;
+    function next(){
+      if(i >= list.length){ if(done) done(); return; }
+      loadPart(list[i]).then(next, function(){ i = list.length; if(done) done(); });
+      i++;
+    }
+    next();
+  }
+  var chunked = el.getAttribute('data-parts');
+  if(chunked){
+    var parts = JSON.parse(chunked || '[]');
+    loadParts(parts, afterMerge);
+  }
+})();
+</script>
+</body>
+</html>
